@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\TourController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
@@ -9,7 +10,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\TourAdminController;
 use App\Http\Controllers\Admin\TourDateAdminController;
 
-// Home -> catálogo
+// Home -> Catálogo
 Route::get('/', fn () => redirect()->route('tours.index'));
 
 // === Catálogo público ===
@@ -18,7 +19,8 @@ Route::get('/tours/{tour}', [TourController::class, 'show'])->name('tours.show')
 
 // === Dashboard (Breeze) ===
 Route::get('/dashboard', fn () => view('dashboard'))
-    ->middleware(['auth', 'verified'])->name('dashboard');
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // === Área autenticada ===
 Route::middleware('auth')->group(function () {
@@ -40,31 +42,31 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });
 
-Route::prefix('admin')->name('admin.')->middleware(['auth','can:admin'])->group(function () {
-    // Test simple para confirmar que el grupo Admin está cargando
-    Route::get('ping', fn () => 'pong')->name('ping');
+// === Admin (auth + gate:admin) ===
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth', 'can:admin'])
+    ->group(function () {
 
-    // CRUD de Tours
-    Route::resource('tours', \App\Http\Controllers\Admin\TourAdminController::class)->except(['show']);
+        // Ping opcional
+        Route::get('test', fn () => 'OK ADMIN')->name('ping');
 
-    // Fechas (anidadas, con shallow)
-    Route::resource('tours.dates', \App\Http\Controllers\Admin\TourDateAdminController::class)
-        ->shallow()
-        ->except(['show','index']);
+        // CRUD de Tours
+        Route::resource('tours', TourAdminController::class)->except(['show']);
 
-    // Soft delete helpers — Tours
-    Route::post('tours/{id}/restore', [\App\Http\Controllers\Admin\TourAdminController::class, 'restore'])
-        ->name('tours.restore');
-    Route::delete('tours/{id}/force', [\App\Http\Controllers\Admin\TourAdminController::class, 'forceDelete'])
-        ->name('tours.forceDelete');
+        // Fechas anidadas (con shallow)
+        Route::resource('tours.dates', TourDateAdminController::class)
+            ->shallow()
+            ->except(['show', 'index']);
 
-    // Soft delete helpers — Dates
-    Route::post('dates/{id}/restore', [\App\Http\Controllers\Admin\TourDateAdminController::class, 'restore'])
-        ->name('dates.restore');
-    Route::delete('dates/{id}/force', [\App\Http\Controllers\Admin\TourDateAdminController::class, 'forceDelete'])
-        ->name('dates.forceDelete');
-});
-   
+        // Soft delete helpers — Tours
+        Route::post('tours/{id}/restore', [TourAdminController::class, 'restore'])->name('tours.restore');
+        Route::delete('tours/{id}/force', [TourAdminController::class, 'forceDelete'])->name('tours.forceDelete');
 
-// Necesario para que Breeze funcione (login/register/etc)
+        // Soft delete helpers — Dates
+        Route::post('dates/{id}/restore', [TourDateAdminController::class, 'restore'])->name('dates.restore');
+        Route::delete('dates/{id}/force', [TourDateAdminController::class, 'forceDelete'])->name('dates.forceDelete');
+    });
+
+// Necesario para Breeze (login/register/etc.)
 require __DIR__.'/auth.php';

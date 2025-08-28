@@ -2,29 +2,53 @@
 
 namespace App\Models;
 
+use App\Models\CartItem;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Cart extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id','status']; // status: pending | converted
+    protected $fillable = ['user_id', 'status'];
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function items(): HasMany
+    /** Relación: items del carrito */
+    public function items()
     {
         return $this->hasMany(CartItem::class);
     }
 
-    public function getTotalAttribute(): float
+    /**
+     * Devuelve el carrito OPEN del usuario.
+     * - Si hay más de uno, prioriza el que tiene más items (o el más nuevo).
+     * - Si no hay ninguno, crea uno nuevo.
+     */
+    public static function forUserOpen(User $user): Cart
     {
-        return (float) $this->items->sum('subtotal');
+        $cart = static::withCount('items')
+            ->where('user_id', $user->id)
+            ->where('status', 'open')
+            ->orderByDesc('items_count')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $cart) {
+            $cart = static::create([
+                'user_id' => $user->id,
+                'status'  => 'open',
+            ]);
+        }
+
+        return $cart;
+    }
+
+    /** Total calculado del carrito (fallback si subtotal viniera null) */
+    public function getTotalAttribute(): int
+    {
+        return (int) $this->items->sum(function ($i) {
+            $sub = $i->subtotal ?? ($i->qty * $i->unit_price);
+            return (int) $sub;
+        });
     }
 }

@@ -4,62 +4,94 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use App\Models\CartItem;
-use App\Models\Tour;
 use App\Models\TourDate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CartController extends Controller
 {
-    private function getOrCreateCart($user): Cart
-    {
-        return Cart::firstOrCreate(['user_id'=>$user->id,'status'=>'pending']);
-    }
-
+    /** Mostrar /cart */
     public function show(Request $request)
     {
-        $cart = Cart::where('user_id',$request->user()->id)
-            ->where('status','pending')
-            ->with(['items.tour','items.tourDate'])
-            ->first();
+        $cart = Cart::forUserOpen($request->user())
+            ->load(['items.tour', 'items.tourDate']);
 
         return view('cart.show', compact('cart'));
     }
 
+    /** Agregar item al carrito */
     public function add(Request $request)
     {
+        // Acepta date_id O tour_date_id (cualquiera de los dos)
         $data = $request->validate([
-            'tour_id'      => ['required','exists:tours,id'],
-            'tour_date_id' => ['required','exists:tour_dates,id'],
-            'qty'          => ['required','integer','min:1','max:10'],
+            'tour_id'      => ['required','integer','exists:tours,id'],
+            'date_id'      => ['required_without:tour_date_id','integer','exists:tour_dates,id'],
+            'tour_date_id' => ['required_without:date_id','integer','exists:tour_dates,id'],
+            'qty'          => ['required','integer','min:1'],
+        ], [
+            'date_id.required_without'      => 'Falta la fecha.',
+            'tour_date_id.required_without' => 'Falta la fecha.',
         ]);
 
-        $tour     = Tour::findOrFail($data['tour_id']);
-        $tourDate = TourDate::findOrFail($data['tour_date_id']);
+        // Unificamos el ID de la fecha
+        $dateId = (int) ($data['date_id'] ?? $data['tour_date_id']);
 
-        if (!$tour->is_active || !$tourDate->is_active) return back()->with('error','Tour o fecha inactiva.');
-        if ($tourDate->start_date->lt(now()->startOfDay())) return back()->with('error','La salida ya pasó.');
-        if ($tourDate->available < $data['qty']) return back()->with('error','No hay cupos suficientes.');
+        // Detectar cómo se llama la FK en cart_items
+        $dateCol = Schema::hasColumn('cart_items', 'tour_date_id') ? 'tour_date_id' : 'date_id';
 
-        $cart = $this->getOrCreateCart($request->user());
+        $cart = Cart::forUserOpen($request->user());
 
-        $item = CartItem::firstOrNew([
-            'cart_id'=>$cart->id,'tour_id'=>$tour->id,'tour_date_id'=>$tourDate->id,
-        ]);
-        $item->qty = ($item->exists ? $item->qty : 0) + (int)$data['qty'];
-        if ($item->qty > $tourDate->available) return back()->with('error','No hay cupos suficientes para esa cantidad.');
+        return DB::transaction(function () use ($cart, $data, $dateId, $dateCol) {
 
-        $item->unit_price = (float) $tourDate->price;
-        $item->subtotal   = $item->unit_price * $item->qty;
-        $item->save();
+            /** @var \App\Models\TourDate $date */
+            $date = TourDate::whereKey($dateId)->lockForUpdate()->firstOrFail();
 
-        return redirect()->route('cart.show')->with('ok','Agregado al carrito.');
+            if (! $date->is_active) {
+                return back()->with('error','La fecha no está activa.');
+            }
+            if ($date->start_date->isPast()) {
+                return back()->with('error','La salida ya pasó.');
+            }
+
+            // Si ya existe mismo tour+fecha, acumulamos cantidad
+            $existing = CartItem::where('cart_id', $cart->id)
+                ->where('tour_id', (int) $data['tour_id'])
+                ->where($dateCol, $dateId)
+                ->first();
+
+            $newQty = ($existing?->qty ?? 0) + (int) $data['qty'];
+
+            if ($newQty > $date->available) {
+                return back()->with('error', 'No hay cupos suficientes para esa cantidad.');
+            }
+
+            $item = $existing ?? new CartItem([
+                'cart_id' => $cart->id,
+                'tour_id' => (int) $data['tour_id'],
+                $dateCol  => $dateId,
+            ]);
+
+            $item->qty        = $newQty;
+            $item->unit_price = $date->price;
+            $item->subtotal   = $item->qty * $item->unit_price;
+            $item->save();
+
+            return redirect()->route('cart.show')->with('ok','Agregado al carrito.');
+        });
     }
 
+    /** Quitar item del carrito */
     public function remove(Request $request, CartItem $item)
     {
-        $cart = $this->getOrCreateCart($request->user());
-        abort_unless($item->cart_id === $cart->id, 403);
+        $cart = Cart::forUserOpen($request->user());
+
+        if ((int) $item->cart_id !== (int) $cart->id) {
+            abort(403);
+        }
+
         $item->delete();
-        return back()->with('ok','Ítem eliminado.');
+
+        return back()->with('ok', 'Item eliminado.');
     }
 }
