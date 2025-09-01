@@ -51,13 +51,8 @@
                 @endforeach
             </div>
 
-            {{-- Opción A: calcular total en la vista (este es el snippet que preguntaste) --}}
-            @php
-                $total = $cart->items->sum(fn($i) => (int) $i->qty * (int) $i->unit_price);
-            @endphp
-
-            {{-- Opción B: usar accessor $cart->total (si lo implementaste en el modelo) --}}
-            {{-- @php $total = $cart->total; @endphp --}}
+            {{-- 👇 Usamos el accessor del modelo --}}
+            @php $total = $cart->total; @endphp
 
             <div class="mt-4 flex items-center justify-between">
                 <div class="text-sm text-gray-600">Total:</div>

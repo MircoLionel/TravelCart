@@ -150,4 +150,14 @@
             </div>
         </div>
     </div>
+    <a href="{{ route('orders.voucher', $order) }}" class="inline-flex px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+         Descargar voucher (PDF)
+    </a>
+    <a href="{{ route('orders.voucher', $order) }}" class="btn btn-primary">
+    Descargar voucher (PDF)
+</a>
+<a href="{{ route('orders.voucher', $order) }}" class="inline-block px-3 py-2 border rounded">
+    Ver voucher / Imprimir
+</a>
+
 </x-app-layout>

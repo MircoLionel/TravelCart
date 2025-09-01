@@ -21,13 +21,23 @@
                     </x-nav-link>
 
                     @auth
-                        <x-nav-link :href="route('cart.show')" :active="request()->routeIs('cart.*')">
-                            Carrito
-                        </x-nav-link>
+                        @if(auth()->user()->is_approved)
+                            <x-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">
+                                Mis órdenes
+                            </x-nav-link>
+
+                            <x-nav-link :href="route('cart.show')" :active="request()->routeIs('cart.*')">
+                                Carrito
+                            </x-nav-link>
+                        @else
+                            <x-nav-link :href="route('account.pending')" :active="request()->routeIs('account.pending')">
+                                Cuenta pendiente
+                            </x-nav-link>
+                        @endif
                     @endauth
 
                     @can('admin')
-                        <x-nav-link :href="route('admin.tours.index')" :active="request()->routeIs('admin.*')">
+                        <x-nav-link :href="route('admin.users.index')" :active="str_starts_with(optional(request()->route())->getName(), 'admin.')">
                             Admin
                         </x-nav-link>
                     @endcan
@@ -104,13 +114,23 @@
             </x-responsive-nav-link>
 
             @auth
-                <x-responsive-nav-link :href="route('cart.show')" :active="request()->routeIs('cart.*')">
-                    Carrito
-                </x-responsive-nav-link>
+                @if(auth()->user()->is_approved)
+                    <x-responsive-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">
+                        Mis órdenes
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('cart.show')" :active="request()->routeIs('cart.*')">
+                        Carrito
+                    </x-responsive-nav-link>
+                @else
+                    <x-responsive-nav-link :href="route('account.pending')" :active="request()->routeIs('account.pending')">
+                        Cuenta pendiente
+                    </x-responsive-nav-link>
+                @endif
             @endauth
 
             @can('admin')
-                <x-responsive-nav-link :href="route('admin.tours.index')" :active="request()->routeIs('admin.*')">
+                <x-responsive-nav-link :href="route('admin.users.index')" :active="str_starts_with(optional(request()->route())->getName(), 'admin.')">
                     Admin
                 </x-responsive-nav-link>
             @endcan

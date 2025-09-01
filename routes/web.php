@@ -7,8 +7,17 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
+
+// Admin controllers
 use App\Http\Controllers\Admin\TourAdminController;
 use App\Http\Controllers\Admin\TourDateAdminController;
+use App\Http\Controllers\Admin\UserAdminController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
 // Home -> Catálogo
 Route::get('/', fn () => redirect()->route('tours.index'));
@@ -22,9 +31,14 @@ Route::get('/dashboard', fn () => view('dashboard'))
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-// === Área autenticada ===
-Route::middleware('auth')->group(function () {
-    // Perfil (Breeze)
+// === Página para usuarios NO aprobados (logueados) ===
+Route::view('/account/pending', 'account.pending')
+    ->middleware('auth')
+    ->name('account.pending');
+
+// === Área autenticada y aprobada ===
+Route::middleware(['auth', 'approved'])->group(function () {
+    // Perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -38,8 +52,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::post('/checkout', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
 
-    // Orden / Confirmación
+    // Órdenes
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+    // Voucher imprimible
+    Route::get('/orders/{order}/voucher', [OrderController::class, 'voucher'])->name('orders.voucher');
 });
 
 // === Admin (auth + gate:admin) ===
@@ -50,6 +68,12 @@ Route::prefix('admin')
 
         // Ping opcional
         Route::get('test', fn () => 'OK ADMIN')->name('ping');
+
+        // Gestión de usuarios (aprobación y rol admin)
+        Route::get('users',            [UserAdminController::class, 'index'])->name('users.index');
+        Route::patch('users/{user}/approve',     [UserAdminController::class, 'approve'])->name('users.approve');
+        Route::patch('users/{user}/revoke',      [UserAdminController::class, 'revoke'])->name('users.revoke');
+        Route::patch('users/{user}/toggle-admin',[UserAdminController::class, 'toggleAdmin'])->name('users.toggleAdmin');
 
         // CRUD de Tours
         Route::resource('tours', TourAdminController::class)->except(['show']);
@@ -68,5 +92,5 @@ Route::prefix('admin')
         Route::delete('dates/{id}/force', [TourDateAdminController::class, 'forceDelete'])->name('dates.forceDelete');
     });
 
-// Necesario para Breeze (login/register/etc.)
+// Rutas Breeze (login/register/etc.)
 require __DIR__.'/auth.php';

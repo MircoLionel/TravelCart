@@ -3,21 +3,18 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Routing\Router;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Aquí puedes registrar bindings o singletons si los necesitas.
+        //
     }
 
-    public function boot(): void
+    public function boot(Router $router): void
     {
-        // Gate para proteger /admin
-        // Usamos el FQCN para evitar confusiones de namespace.
-        Gate::define('admin', function (\App\Models\User $user): bool {
-            return (bool) $user->is_admin;
-        });
+        // Fuerza el alias 'approved' por si el Kernel no se resolvió antes
+        $router->aliasMiddleware('approved', \App\Http\Middleware\EnsureApproved::class);
     }
 }
