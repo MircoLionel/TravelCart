@@ -10,7 +10,7 @@
                     </a>
                 </div>
 
-                <!-- Navigation Links -->
+                <!-- Navigation Links (desktop) -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         Dashboard
@@ -21,30 +21,55 @@
                     </x-nav-link>
 
                     @auth
-                        @if(auth()->user()->is_approved)
-                            <x-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">
-                                Mis órdenes
-                            </x-nav-link>
+                        <x-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">
+                            Mis órdenes
+                        </x-nav-link>
 
-                            <x-nav-link :href="route('cart.show')" :active="request()->routeIs('cart.*')">
-                                Carrito
-                            </x-nav-link>
-                        @else
-                            <x-nav-link :href="route('account.pending')" :active="request()->routeIs('account.pending')">
-                                Cuenta pendiente
-                            </x-nav-link>
-                        @endif
+                        <x-nav-link :href="route('cart.show')" :active="request()->routeIs('cart.*')">
+                            Carrito
+                        </x-nav-link>
                     @endauth
 
+                    {{-- Dropdown Admin (solo si tiene permiso) --}}
                     @can('admin')
-                        <x-nav-link :href="route('admin.users.index')" :active="str_starts_with(optional(request()->route())->getName(), 'admin.')">
-                            Admin
-                        </x-nav-link>
+                        @php($isAdminActive = request()->routeIs('admin.*'))
+
+                        <x-dropdown align="left" width="56">
+                            <x-slot name="trigger">
+                                <button
+                                    class="@class([
+                                        'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition',
+                                        'border-indigo-400 text-gray-900 focus:border-indigo-700' => $isAdminActive,
+                                        'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300' => ! $isAdminActive,
+                                    ])"
+                                >
+                                    Admin
+                                    @if($isAdminActive)
+                                        <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-indigo-500"></span>
+                                    @endif
+                                    <svg class="ms-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            </x-slot>
+
+                            <x-slot name="content">
+                                <x-dropdown-link :href="route('admin.tours.index')" :active="request()->routeIs('admin.tours.*')">
+                                    Tours
+                                </x-dropdown-link>
+
+                                <x-dropdown-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                                        Usuarios
+                                    </x-dropdown-link>
+                            </x-slot>
+                        </x-dropdown>
                     @endcan
                 </div>
             </div>
 
-            <!-- Settings Dropdown (solo si está logueado) -->
+            <!-- Settings Dropdown (desktop) -->
             @auth
                 <div class="hidden sm:flex sm:items-center sm:ms-6">
                     <x-dropdown align="right" width="48">
@@ -76,11 +101,15 @@
                     </x-dropdown>
                 </div>
             @else
-                <!-- Si es invitado, mostrar Login/Registro -->
+                <!-- Botones Login/Registro (desktop) -->
                 <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
-                    <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-gray-900 underline">Iniciar sesión</a>
+                    <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-gray-900 underline">
+                        Iniciar sesión
+                    </a>
                     @if (Route::has('register'))
-                        <a href="{{ route('register') }}" class="text-sm text-gray-600 hover:text-gray-900 underline">Registrarse</a>
+                        <a href="{{ route('register') }}" class="text-sm text-gray-600 hover:text-gray-900 underline">
+                            Registrarse
+                        </a>
                     @endif
                 </div>
             @endauth
@@ -102,7 +131,7 @@
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
+    <!-- Responsive Navigation Menu (mobile) -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
@@ -114,24 +143,24 @@
             </x-responsive-nav-link>
 
             @auth
-                @if(auth()->user()->is_approved)
-                    <x-responsive-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">
-                        Mis órdenes
-                    </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">
+                    Mis órdenes
+                </x-responsive-nav-link>
 
-                    <x-responsive-nav-link :href="route('cart.show')" :active="request()->routeIs('cart.*')">
-                        Carrito
-                    </x-responsive-nav-link>
-                @else
-                    <x-responsive-nav-link :href="route('account.pending')" :active="request()->routeIs('account.pending')">
-                        Cuenta pendiente
-                    </x-responsive-nav-link>
-                @endif
+                <x-responsive-nav-link :href="route('cart.show')" :active="request()->routeIs('cart.*')">
+                    Carrito
+                </x-responsive-nav-link>
             @endauth
 
             @can('admin')
-                <x-responsive-nav-link :href="route('admin.users.index')" :active="str_starts_with(optional(request()->route())->getName(), 'admin.')">
-                    Admin
+                <div class="px-4 pt-2 text-xs text-gray-400">Admin</div>
+
+                <x-responsive-nav-link :href="route('admin.tours.index')" :active="request()->routeIs('admin.tours.*')">
+                    Tours
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                    Usuarios
                 </x-responsive-nav-link>
             @endcan
         </div>

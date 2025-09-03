@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -14,7 +14,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // \App\Models\Model::class => \App\Policies\ModelPolicy::class,
+        // Model => Policy (si usas policies, van aquí)
     ];
 
     /**
@@ -22,16 +22,17 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->registerPolicies();
+        // Define "admin" SOLO si aún no existe (evita colisiones si se define en otro provider)
+        if (! Gate::has('admin')) {
+            Gate::define('admin', function (User $user) {
+                // Soporta ambos esquemas: role=admin o is_admin=1
+                return ($user->role === 'admin') || (bool) ($user->is_admin ?? false);
+            });
+        }
 
-        // Usuario administrador (usa la columna boolean is_admin)
-        Gate::define('admin', function (User $user): bool {
-            return (bool) $user->is_admin;
-        });
-
-        // Usuario aprobado para operar (usa la columna boolean is_approved)
-        Gate::define('approved', function (User $user): bool {
-            return (bool) $user->is_approved;
-        });
+        // (opcional) vendor
+        if (! Gate::has('vendor')) {
+            Gate::define('vendor', fn (User $user) => $user->role === 'vendor');
+        }
     }
 }

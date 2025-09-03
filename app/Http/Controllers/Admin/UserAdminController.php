@@ -11,66 +11,42 @@ class UserAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $q = $request->string('q')->toString();
+        $q = trim((string)$request->query('q',''));
 
         $users = User::query()
-            ->when($q, fn($qb) =>
-                $qb->where(function($qq) use ($q) {
-                    $qq->where('name', 'like', "%{$q}%")
-                       ->orWhere('email', 'like', "%{$q}%")
-                       ->orWhere('legajo', 'like', "%{$q}%");
-                })
-            )
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($q2) use ($q) {
+                    $q2->where('name','like',"%{$q}%")
+                       ->orWhere('email','like',"%{$q}%")
+                       ->orWhere('legajo','like',"%{$q}%");
+                });
+            })
             ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.users.index', compact('users', 'q'));
+        return view('admin.users.index', compact('users','q'));
+    }
+
+    public function edit(User $user)
+    {
+        return view('admin.users.edit', compact('user'));
     }
 
     public function update(Request $request, User $user)
     {
         $data = $request->validate([
-            'role'    => ['required', Rule::in(['buyer', 'supplier'])],
-            'legajo'  => ['nullable', 'string', 'max:50'],
-            'is_admin'=> ['nullable', 'boolean'],
+            'role'        => ['required', Rule::in(['admin','vendor','buyer'])],
+            'is_approved' => ['sometimes','boolean'],
+            'legajo'      => ['nullable','string','max:50'],
         ]);
 
-        // Evitar que un admin se quite a sí mismo el admin sin querer
-        if ($request->user()->is($user) && empty($data['is_admin'])) {
-            return back()->with('error', 'No podés quitarte el rol de admin a vos mismo.');
-        }
+        $data['is_approved'] = (bool)($data['is_approved'] ?? false);
 
-        $user->role     = $data['role'];
-        $user->legajo   = $data['legajo'] ?: null;
-        $user->is_admin = (bool)($data['is_admin'] ?? false);
-        $user->save();
+        $user->fill($data)->save();
 
-        return back()->with('ok', 'Usuario actualizado.');
-    }
-
-    public function approve(User $user)
-    {
-        if (!$user->legajo) {
-            return back()->with('error', 'Para aprobar, primero cargá un legajo.');
-        }
-
-        $user->is_approved = true;
-        $user->save();
-
-        return back()->with('ok', 'Usuario aprobado.');
-    }
-
-    public function revoke(User $user)
-    {
-        // Ojo: no bloqueamos al propio admin que hace la acción
-        if (auth()->id() === $user->id) {
-            return back()->with('error', 'No podés revocar tu propia aprobación.');
-        }
-
-        $user->is_approved = false;
-        $user->save();
-
-        return back()->with('ok', 'Aprobación revocada.');
+        return redirect()
+            ->route('admin.users.edit', $user)
+            ->with('ok','Usuario actualizado correctamente.');
     }
 }

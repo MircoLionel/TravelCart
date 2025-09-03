@@ -61,36 +61,53 @@ Route::middleware(['auth', 'approved'])->group(function () {
 });
 
 // === Admin (auth + gate:admin) ===
+// === Admin (auth + gate:admin) ===
 Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'can:admin'])
     ->group(function () {
 
-        // Ping opcional
+        // (opcional) Home Admin
+        Route::get('/', fn () => redirect()->route('admin.users.index'))->name('home');
+        
+        Route::get('/', fn () => redirect()->route('admin.users.index'))->name('home');
+
+        // Usuarios (aprobación, legajo, rol)
+        Route::resource('users', \App\Http\Controllers\Admin\UserAdminController::class)
+            ->only(['index','edit','update']);
+
+        // (tus rutas existentes)
+        Route::resource('tours', \App\Http\Controllers\Admin\TourAdminController::class)->except(['show']);
+        Route::resource('tours.dates', \App\Http\Controllers\Admin\TourDateAdminController::class)
+            ->shallow()
+            ->except(['show','index']);
+
+        Route::post('tours/{id}/restore', [\App\Http\Controllers\Admin\TourAdminController::class, 'restore'])->name('tours.restore');
+        Route::delete('tours/{id}/force', [\App\Http\Controllers\Admin\TourAdminController::class, 'forceDelete'])->name('tours.forceDelete');
+
+        Route::post('dates/{id}/restore', [\App\Http\Controllers\Admin\TourDateAdminController::class, 'restore'])->name('dates.restore');
+        Route::delete('dates/{id}/force', [\App\Http\Controllers\Admin\TourDateAdminController::class, 'forceDelete'])->name('dates.forceDelete');
+    
+        // --- Usuarios (nuevo) ---
+        Route::resource('users', \App\Http\Controllers\Admin\UserAdminController::class)
+            ->only(['index','edit','update']);
+
+        // --- Lo que ya tenías ---
         Route::get('test', fn () => 'OK ADMIN')->name('ping');
 
-        // Gestión de usuarios (aprobación y rol admin)
-        Route::get('users',            [UserAdminController::class, 'index'])->name('users.index');
-        Route::patch('users/{user}/approve',     [UserAdminController::class, 'approve'])->name('users.approve');
-        Route::patch('users/{user}/revoke',      [UserAdminController::class, 'revoke'])->name('users.revoke');
-        Route::patch('users/{user}/toggle-admin',[UserAdminController::class, 'toggleAdmin'])->name('users.toggleAdmin');
+        Route::resource('tours', \App\Http\Controllers\Admin\TourAdminController::class)->except(['show']);
 
-        // CRUD de Tours
-        Route::resource('tours', TourAdminController::class)->except(['show']);
-
-        // Fechas anidadas (con shallow)
-        Route::resource('tours.dates', TourDateAdminController::class)
+        Route::resource('tours.dates', \App\Http\Controllers\Admin\TourDateAdminController::class)
             ->shallow()
             ->except(['show', 'index']);
 
-        // Soft delete helpers — Tours
-        Route::post('tours/{id}/restore', [TourAdminController::class, 'restore'])->name('tours.restore');
-        Route::delete('tours/{id}/force', [TourAdminController::class, 'forceDelete'])->name('tours.forceDelete');
+        Route::post('tours/{id}/restore', [\App\Http\Controllers\Admin\TourAdminController::class, 'restore'])->name('tours.restore');
+        Route::delete('tours/{id}/force', [\App\Http\Controllers\Admin\TourAdminController::class, 'forceDelete'])->name('tours.forceDelete');
 
-        // Soft delete helpers — Dates
-        Route::post('dates/{id}/restore', [TourDateAdminController::class, 'restore'])->name('dates.restore');
-        Route::delete('dates/{id}/force', [TourDateAdminController::class, 'forceDelete'])->name('dates.forceDelete');
+        Route::post('dates/{id}/restore', [\App\Http\Controllers\Admin\TourDateAdminController::class, 'restore'])->name('dates.restore');
+        Route::delete('dates/{id}/force', [\App\Http\Controllers\Admin\TourDateAdminController::class, 'forceDelete'])->name('dates.forceDelete');
     });
+
 
 // Rutas Breeze (login/register/etc.)
 require __DIR__.'/auth.php';

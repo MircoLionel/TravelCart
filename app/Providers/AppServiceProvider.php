@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -12,9 +13,12 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-    public function boot(Router $router): void
+    public function boot(): void
     {
-        // Fuerza el alias 'approved' por si el Kernel no se resolvió antes
-        $router->aliasMiddleware('approved', \App\Http\Middleware\EnsureApproved::class);
+        if (! Gate::has('admin')) {
+            Gate::define('admin', function (User $user) {
+                return ($user->role === 'admin') || (bool) ($user->is_admin ?? false);
+            });
+        }
     }
 }
