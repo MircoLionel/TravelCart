@@ -7,19 +7,19 @@ use Illuminate\Foundation\Http\Kernel as HttpKernel;
 class Kernel extends HttpKernel
 {
     /**
-     * Global HTTP middleware.
+     * Middleware globales (todas las requests).
      */
     protected $middleware = [
         \Illuminate\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
-        \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
-        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-        \Illuminate\Foundation\Http\Middleware\TrimStrings::class,
+        \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
+        \Illuminate\Http\Middleware\ValidatePostSize::class,
+        \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
 
     /**
-     * Middleware groups.
+     * Grupos de middleware.
      */
     protected $middlewareGroups = [
         'web' => [
@@ -32,27 +32,28 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
+            // \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 
     /**
-     * Aliases de middleware para rutas (Laravel 12).
+     * Aliases para usar por nombre en rutas.
      */
     protected $middlewareAliases = [
-        'auth'       => \Illuminate\Auth\Middleware\Authenticate::class,
-        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-        'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
-        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
-        'can'        => \Illuminate\Auth\Middleware\Authorize::class,
-        'guest'      => \App\Http\Middleware\RedirectIfAuthenticated::class,
+        'auth'             => \Illuminate\Auth\Middleware\Authenticate::class,
+        'auth.basic'       => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+        'auth.session'     => \Illuminate\Session\Middleware\AuthenticateSession::class,
+        'cache.headers'    => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+        'can'              => \Illuminate\Auth\Middleware\Authorize::class,
+        'guest'            => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
-        'signed'     => \Illuminate\Routing\Middleware\ValidateSignature::class,
-        'throttle'   => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'verified'   => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'precognitive'     => \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
+        'signed'           => \Illuminate\Routing\Middleware\ValidateSignature::class,
+        'throttle'         => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        'verified'         => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
 
-        // 👇 nuestro alias
-        'approved'   => \App\Http\Middleware\EnsureApproved::class,
+        // Alias opcional (no lo necesitamos si usamos la clase en rutas)
+        'approved'         => \App\Http\Middleware\EnsureApproved::class,
     ];
 }

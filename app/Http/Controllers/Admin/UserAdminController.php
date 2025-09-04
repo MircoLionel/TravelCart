@@ -5,48 +5,41 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class UserAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $q = trim((string)$request->query('q',''));
+        $q = trim((string) $request->get('q', ''));
 
         $users = User::query()
-            ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($q2) use ($q) {
-                    $q2->where('name','like',"%{$q}%")
-                       ->orWhere('email','like',"%{$q}%")
-                       ->orWhere('legajo','like',"%{$q}%");
+            ->when($q, function ($query) use ($q) {
+                $query->where(function ($qB) use ($q) {
+                    $qB->where('name', 'like', "%{$q}%")
+                       ->orWhere('email', 'like', "%{$q}%")
+                       ->orWhere('legajo', 'like', "%{$q}%");
                 });
             })
-            ->orderByDesc('id')
+            ->orderBy('id', 'desc')
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.users.index', compact('users','q'));
-    }
-
-    public function edit(User $user)
-    {
-        return view('admin.users.edit', compact('user'));
+        return view('admin.users.index', compact('users', 'q'));
     }
 
     public function update(Request $request, User $user)
     {
-        $data = $request->validate([
-            'role'        => ['required', Rule::in(['admin','vendor','buyer'])],
-            'is_approved' => ['sometimes','boolean'],
-            'legajo'      => ['nullable','string','max:50'],
+        $validated = $request->validate([
+            'role'        => 'required|in:admin,vendor,buyer',
+            'is_approved' => 'required|boolean',
+            'legajo'      => 'nullable|string|max:50',
         ]);
 
-        $data['is_approved'] = (bool)($data['is_approved'] ?? false);
+        // Mantener is_admin si lo usás para compatibilidad
+        $validated['is_admin'] = $validated['role'] === 'admin';
 
-        $user->fill($data)->save();
+        $user->update($validated);
 
-        return redirect()
-            ->route('admin.users.edit', $user)
-            ->with('ok','Usuario actualizado correctamente.');
+        return back()->with('status', 'Usuario actualizado correctamente.');
     }
 }

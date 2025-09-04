@@ -2,32 +2,28 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {
     /**
-     * A dónde redirigir luego de login (usado por Auth).
+     * The path to your application's "home" route.
      */
     public const HOME = '/dashboard';
 
     /**
-     * Define las rutas de la aplicación.
+     * Define your route model bindings, pattern filters, etc.
      */
     public function boot(): void
     {
         $this->routes(function () {
-            // API (si existe el archivo)
-            if (file_exists(base_path('routes/api.php'))) {
-                Route::middleware('api')
-                    ->prefix('api')
-                    ->group(base_path('routes/api.php'));
-            }
-
-            // Web (debe existir)
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+
+            Route::prefix('api')
+                ->middleware('api')
+                ->group(base_path('routes/api.php'));
         });
     }
 }

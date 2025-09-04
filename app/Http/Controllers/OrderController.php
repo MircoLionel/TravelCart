@@ -62,7 +62,7 @@ class OrderController extends Controller
         // Fallback: HTML imprimible
         return view('orders.voucher', compact('order'));
     }
-
+  
     /**
      * Autoriza acceso a la orden: dueño o admin.
      * (Si ya tenés Policy, podés reemplazar por $this->authorize('view', $order);)

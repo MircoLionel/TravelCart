@@ -1,63 +1,78 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Usuarios</h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Administración de usuarios
+        </h2>
     </x-slot>
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
 
-                <form class="mb-4 flex gap-2">
-                    <input type="text" name="q" value="{{ $q }}" placeholder="Buscar por nombre, email o legajo"
-                           class="w-full sm:w-80 border-gray-300 rounded-md">
-                    <x-primary-button>Buscar</x-primary-button>
-                </form>
+            <form method="GET" class="mb-4 flex gap-2">
+                <input type="text" name="q" value="{{ $q }}" placeholder="Buscar nombre, email o legajo"
+                       class="border rounded px-3 py-2 w-full">
+                <button class="px-4 py-2 bg-indigo-600 text-white rounded">Buscar</button>
+            </form>
 
-                <div class="overflow-x-auto">
-                    <table class="min-w-full border divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-3 py-2 text-left">ID</th>
-                                <th class="px-3 py-2 text-left">Nombre</th>
-                                <th class="px-3 py-2 text-left">Email</th>
-                                <th class="px-3 py-2 text-left">Legajo</th>
-                                <th class="px-3 py-2 text-left">Rol</th>
-                                <th class="px-3 py-2 text-left">Aprobado</th>
-                                <th class="px-3 py-2"></th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
+            @if (session('status'))
+                <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">
+                    {{ session('status') }}
+                </div>
+            @endif
+
+            <div class="bg-white shadow rounded overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left">ID</th>
+                            <th class="px-4 py-2 text-left">Nombre</th>
+                            <th class="px-4 py-2 text-left">Email</th>
+                            <th class="px-4 py-2 text-left">Rol</th>
+                            <th class="px-4 py-2 text-left">Aprobado</th>
+                            <th class="px-4 py-2 text-left">Legajo</th>
+                            <th class="px-4 py-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         @forelse($users as $u)
-                            <tr>
-                                <td class="px-3 py-2">{{ $u->id }}</td>
-                                <td class="px-3 py-2">{{ $u->name }}</td>
-                                <td class="px-3 py-2">{{ $u->email }}</td>
-                                <td class="px-3 py-2">{{ $u->legajo ?: '—' }}</td>
-                                <td class="px-3 py-2">
-                                    <span class="px-2 py-1 rounded bg-gray-100">{{ $u->role ?? 'buyer' }}</span>
+                            <tr class="border-t">
+                                <td class="px-4 py-2">{{ $u->id }}</td>
+                                <td class="px-4 py-2">{{ $u->name }}</td>
+                                <td class="px-4 py-2">{{ $u->email }}</td>
+                                <td class="px-4 py-2">
+                                    <form action="{{ route('admin.users.update', $u) }}" method="POST" class="flex items-center gap-2">
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <select name="role" class="border rounded px-2 py-1">
+                                            <option value="buyer"  @selected($u->role==='buyer')>buyer</option>
+                                            <option value="vendor" @selected($u->role==='vendor')>vendor</option>
+                                            <option value="admin"  @selected($u->role==='admin')>admin</option>
+                                        </select>
                                 </td>
-                                <td class="px-3 py-2">
-                                    @if($u->is_approved)
-                                        <span class="text-green-600 font-semibold">Sí</span>
-                                    @else
-                                        <span class="text-gray-500">No</span>
-                                    @endif
+                                <td class="px-4 py-2">
+                                        <select name="is_approved" class="border rounded px-2 py-1">
+                                            <option value="1" @selected($u->is_approved)>Sí</option>
+                                            <option value="0" @selected(!$u->is_approved)>No</option>
+                                        </select>
                                 </td>
-                                <td class="px-3 py-2 text-right">
-                                    <a href="{{ route('admin.users.edit', $u) }}"
-                                       class="text-indigo-600 hover:underline">Editar</a>
+                                <td class="px-4 py-2">
+                                        <input name="legajo" value="{{ $u->legajo }}" class="border rounded px-2 py-1 w-32">
+                                </td>
+                                <td class="px-4 py-2">
+                                        <button class="px-3 py-1 bg-indigo-600 text-white rounded">Guardar</button>
+                                    </form>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td class="px-3 py-6 text-center text-gray-500" colspan="7">Sin resultados</td></tr>
+                            <tr><td class="px-4 py-6" colspan="7">Sin resultados.</td></tr>
                         @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                    </tbody>
+                </table>
+            </div>
 
-                <div class="mt-4">
-                    {{ $users->links() }}
-                </div>
+            <div class="mt-4">
+                {{ $users->links() }}
             </div>
         </div>
     </div>

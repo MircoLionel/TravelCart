@@ -31,6 +31,7 @@ class CheckoutController extends Controller
 
         return view('checkout.show', compact('cart', 'total'));
     }
+    
 
     /**
      * Confirma la compra, crea la orden, cierra carrito y envía correo.

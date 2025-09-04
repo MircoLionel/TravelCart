@@ -7,14 +7,11 @@
 
     <div class="py-8">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white p-6 shadow rounded">
-                <p class="mb-4">
-                    Tu cuenta está creada pero aún no fue aprobada por el administrador.
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                <p class="text-gray-700">
+                    Tu cuenta aún no fue aprobada por un administrador.
+                    Cuando se habilite, vas a poder comprar y usar el carrito.
                 </p>
-                <p class="mb-4">
-                    Cuando te aprueben, vas a poder comprar y ver tu historial.
-                </p>
-                <p class="text-sm text-gray-500">Si necesitás acelerar la aprobación, contactá al administrador.</p>
             </div>
         </div>
     </div>

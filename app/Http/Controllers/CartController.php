@@ -80,6 +80,7 @@ class CartController extends Controller
             return redirect()->route('cart.show')->with('ok','Agregado al carrito.');
         });
     }
+   
 
     /** Quitar item del carrito */
     public function remove(Request $request, CartItem $item)
