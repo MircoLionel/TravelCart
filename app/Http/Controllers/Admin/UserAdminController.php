@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Audit;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class UserAdminController extends Controller
 {
@@ -20,25 +22,55 @@ class UserAdminController extends Controller
                        ->orWhere('legajo', 'like', "%{$q}%");
                 });
             })
-            ->orderBy('id', 'desc')
+            ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
 
         return view('admin.users.index', compact('users', 'q'));
     }
 
+    // Opcional: si tenés vista de edición individual
+    public function edit(User $user)
+    {
+        return view('admin.users.edit', compact('user'));
+    }
+
     public function update(Request $request, User $user)
     {
+        // 1) Validación de los campos que el admin puede cambiar
         $validated = $request->validate([
-            'role'        => 'required|in:admin,vendor,buyer',
-            'is_approved' => 'required|boolean',
-            'legajo'      => 'nullable|string|max:50',
+            'role'        => ['required', Rule::in(['admin','vendor','buyer'])],
+            'is_approved' => ['sometimes', 'boolean'],
+            'legajo'      => ['nullable', 'string', 'max:50'],
+            // Si también querés permitir modificar nombre/email, descomentá:
+            // 'name'   => ['sometimes','string','max:255'],
+            // 'email'  => ['sometimes','email','max:255', Rule::unique('users','email')->ignore($user->id)],
         ]);
 
-        // Mantener is_admin si lo usás para compatibilidad
-        $validated['is_admin'] = $validated['role'] === 'admin';
+        // Normalizamos boolean (por si viene 'on'/'1')
+        $validated['is_approved'] = $request->boolean('is_approved');
 
-        $user->update($validated);
+        // 2) Mantener compatibilidad con is_admin (si lo seguís usando)
+        $validated['is_admin'] = ($validated['role'] === 'admin');
+
+        // 3) Actualizamos el usuario
+        $user->fill($validated)->save();
+
+        // 4) Registramos AUDITORÍA (acá va la implementación que querías)
+        Audit::create([
+            'actor_id'    => $request->user()->id,        // quién hizo el cambio
+            'action'      => 'user_updated',               // etiqueta de acción
+            'target_type' => User::class,                  // el tipo de objeto afectado
+            'target_id'   => $user->id,                    // el ID del usuario afectado
+            'meta'        => [
+                'role'        => $validated['role'],
+                'is_approved' => $validated['is_approved'],
+                'legajo'      => $validated['legajo'] ?? null,
+                // si habilitás name/email en validación arriba, podés loguearlos también:
+                // 'name'     => $validated['name']  ?? $user->name,
+                // 'email'    => $validated['email'] ?? $user->email,
+            ],
+        ]);
 
         return back()->with('status', 'Usuario actualizado correctamente.');
     }

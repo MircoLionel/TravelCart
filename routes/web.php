@@ -12,7 +12,7 @@ use App\Http\Controllers\Admin\TourAdminController;
 use App\Http\Controllers\Admin\TourDateAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
 use App\Http\Middleware\EnsureApproved;
-
+use App\Http\Controllers\Admin\ReportController;
 // Home -> Catálogo
 Route::get('/', fn () => redirect()->route('tours.index'));
 
@@ -34,6 +34,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/cart/coupon', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply');
+    Route::delete('/cart/coupon', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
 
     // ✅ Requiere usuario aprobado (agregamos la CLASE del middleware)
     Route::middleware([EnsureApproved::class])->group(function () {
@@ -81,6 +83,8 @@ Route::prefix('admin')
         // Soft delete helpers — Dates
         Route::post('dates/{id}/restore', [TourDateAdminController::class, 'restore'])->name('dates.restore');
         Route::delete('dates/{id}/force', [TourDateAdminController::class, 'forceDelete'])->name('dates.forceDelete');
+
+        Route::get('reports/orders.csv', [ReportController::class, 'ordersCsv'])->name('reports.orders.csv');
     });
 
 // Breeze auth routes

@@ -4,6 +4,23 @@
         <h2 class="font-semibold text-xl">Mi Carrito</h2>
     </x-slot>
 
+    @if (session('cart.coupon_code'))
+    <div class="p-3 bg-green-50 border rounded mb-3">
+        Cupón aplicado: <strong>{{ session('cart.coupon_code') }}</strong>
+        — Descuento: <strong>${{ number_format((int)session('cart.discount',0), 0, ',', '.') }}</strong>
+        <form action="{{ route('cart.coupon.remove') }}" method="POST" class="inline">
+            @csrf @method('DELETE')
+            <button class="ml-2 underline text-red-600">Quitar</button>
+        </form>
+    </div>
+@else
+    <form action="{{ route('cart.coupon.apply') }}" method="POST" class="flex gap-2 mb-3">
+        @csrf
+        <input name="code" class="border rounded px-3 py-2" placeholder="Código de cupón">
+        <button class="px-4 py-2 bg-indigo-600 text-white rounded">Aplicar</button>
+    </form>
+@endif
+
     <div class="max-w-5xl mx-auto px-4 py-6">
         @if (session('ok'))
             <div class="mb-4 p-3 bg-green-100 text-green-800 rounded">

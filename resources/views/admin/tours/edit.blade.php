@@ -49,6 +49,29 @@
       <label>Descripción
         <textarea name="description" class="w-full border rounded p-2">{{ old('description',$tour->description) }}</textarea>
       </label>
+      <form action="{{ route('admin.tours.update', $tour) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+    @csrf
+    @method('PUT')
+
+    <!-- ...tus otros campos (title, description, etc.) ... -->
+
+    <div>
+        <label class="block text-sm font-medium mb-1">Imagen actual</label>
+        @if ($tour->image_path)
+            <img src="{{ asset('storage/'.$tour->image_path) }}" alt="Imagen del tour" class="h-32 mb-2 rounded">
+        @else
+            <p class="text-sm text-gray-500 mb-2">Este tour no tiene imagen.</p>
+        @endif
+
+        <label class="block text-sm font-medium mb-1">Subir nueva imagen</label>
+        <input type="file" name="image" class="border rounded p-2 w-full">
+        @error('image')
+            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+        @enderror
+    </div>
+
+    <button class="px-4 py-2 bg-indigo-600 text-white rounded">Guardar</button>
+</form>
       <div class="grid grid-cols-3 gap-3">
         <label>Días
           <input type="number" name="days" min="1" class="w-full border rounded p-2" value="{{ old('days',$tour->days) }}">

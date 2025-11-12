@@ -8,6 +8,7 @@ use App\Models\TourDate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Coupon;
 
 class CartController extends Controller
 {
@@ -95,4 +96,43 @@ class CartController extends Controller
 
         return back()->with('ok', 'Item eliminado.');
     }
+    public function applyCoupon(\Illuminate\Http\Request $request)
+{
+    $request->validate([
+        'code' => ['required','string','max:50'],
+    ]);
+
+    $user = $request->user();
+
+    // Calculamos el subtotal actual del carrito
+    $cart = \App\Models\Cart::forUserOpen($user);
+    $items = \App\Models\CartItem::with(['tourDate','tour'])->where('cart_id',$cart->id)->get();
+    $subtotal = (int) $items->sum('subtotal');
+
+    $coupon = Coupon::where('code', strtoupper(trim($request->code)))->first();
+    if (!$coupon || !$coupon->isValidForUser($user, $subtotal)) {
+        return back()->with('error','Cupón inválido o no aplicable.');
+    }
+
+    $discount = $coupon->discountFor($subtotal);
+    if ($discount <= 0) {
+        return back()->with('error','El cupón no genera descuento con el subtotal actual.');
+    }
+
+    // Guardamos en sesión (no tocamos DB del carrito)
+    session([
+        'cart.coupon_id'    => $coupon->id,
+        'cart.coupon_code'  => $coupon->code,
+        'cart.discount'     => $discount,
+    ]);
+
+    return back()->with('ok','Cupón aplicado: '.$coupon->code);
 }
+
+public function removeCoupon()
+{
+    session()->forget(['cart.coupon_id','cart.coupon_code','cart.discount']);
+    return back()->with('ok','Cupón quitado.');
+}
+}
+

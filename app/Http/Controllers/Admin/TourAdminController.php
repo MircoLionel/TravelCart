@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Tour;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class TourAdminController extends Controller
 {
@@ -82,8 +83,16 @@ class TourAdminController extends Controller
             'origin'      => 'nullable|string|max:255',
             'destination' => 'required|string|max:255',
             'is_active'   => 'boolean',
+            'image'       => 'nullable|image|max:2048',   // ✅ validar imagen
         ]);
+
         $data['is_active'] = $r->boolean('is_active');
+
+        // ✅ guardar imagen si viene
+        if ($r->hasFile('image')) {
+            $path = $r->file('image')->store('tours', 'public'); // storage/app/public/tours/...
+            $data['image_path'] = $path;
+        }
 
         $tour = Tour::create($data);
 
@@ -115,8 +124,20 @@ class TourAdminController extends Controller
             'origin'      => 'nullable|string|max:255',
             'destination' => 'required|string|max:255',
             'is_active'   => 'boolean',
+            'image'       => 'nullable|image|max:2048',   // ✅ validar imagen también en update
         ]);
+
         $data['is_active'] = $r->boolean('is_active');
+
+        // ✅ reemplazar imagen si viene una nueva
+        if ($r->hasFile('image')) {
+            // borrar la anterior (opcional)
+            if (!empty($tour->image_path)) {
+                Storage::disk('public')->delete($tour->image_path);
+            }
+            $path = $r->file('image')->store('tours', 'public');
+            $data['image_path'] = $path;
+        }
 
         $tour->update($data);
 
@@ -158,6 +179,12 @@ class TourAdminController extends Controller
     public function forceDelete(Request $r, $id)
     {
         $tour = Tour::withTrashed()->findOrFail($id);
+
+        // (opcional) borrar imagen física
+        if (!empty($tour->image_path)) {
+            Storage::disk('public')->delete($tour->image_path);
+        }
+
         $tour->forceDelete();
 
         return redirect()->route('admin.tours.index', $this->backQuery($r))

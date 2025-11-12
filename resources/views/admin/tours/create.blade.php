@@ -16,6 +16,21 @@
         <button class="px-4 py-2 bg-indigo-600 text-white rounded">Guardar</button>
         <a href="{{ route('admin.tours.index') }}" class="underline">Volver</a>
       </div>
+      <form action="{{ route('admin.tours.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+    @csrf
+
+    <!-- ...tus otros campos (title, description, etc.) ... -->
+
+    <div>
+        <label class="block text-sm font-medium mb-1">Imagen</label>
+        <input type="file" name="image" class="border rounded p-2 w-full">
+        @error('image')
+            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+        @enderror
+    </div>
+
+    <button class="px-4 py-2 bg-indigo-600 text-white rounded">Crear</button>
+</form>
     </form>
   </div>
 </x-app-layout>

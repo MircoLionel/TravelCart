@@ -8,6 +8,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(TourSeeder::class);
+        $this->call([
+            TourSeeder::class,
+            CouponSeeder::class, // ⬅️ agrega esta línea
+        ]);
     }
 }
