@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\CouponRedemption;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -102,8 +103,13 @@ class CheckoutController extends Controller
             }
 
             // 4) Cerrar carrito
-            $cart->status = 'closed';
-            $cart->save();
+            try {
+                $cart->status = 'closed';
+                $cart->save();
+            } catch (QueryException $e) {
+                $cart->status = 'converted';
+                $cart->save();
+            }
 
             // 5) Limpiar datos de cupón en sesión
             session()->forget(['cart.coupon_id','cart.coupon_code','cart.discount']);
