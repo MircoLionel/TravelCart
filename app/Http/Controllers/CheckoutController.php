@@ -11,7 +11,9 @@ use App\Models\CouponRedemption;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class CheckoutController extends Controller
 {
@@ -150,10 +152,20 @@ class CheckoutController extends Controller
                 // 5) Limpiar datos de cupón en sesión
                 session()->forget(['cart.coupon_id','cart.coupon_code','cart.discount']);
 
-                // 6) Enviar correo de confirmación (HTML + voucher si lo agregaste)
-                Mail::to($user->email)->send(
-                    new OrderConfirmed($order->load(['items.tour', 'items.tourDate', 'user']))
-                );
+                // 6) Enviar correo de confirmación luego del commit.
+                DB::afterCommit(function () use ($user, $order) {
+                    try {
+                        $order->load(['items.tour', 'items.tourDate', 'user']);
+
+                        Mail::to($user->email)->send(new OrderConfirmed($order));
+                    } catch (Throwable $mailError) {
+                        Log::warning('No se pudo enviar el correo de confirmación de orden.', [
+                            'order_id' => $order->id,
+                            'user_id' => $user->id,
+                            'error' => $mailError->getMessage(),
+                        ]);
+                    }
+                });
 
                 // 7) Redirigir a pantalla de confirmación de orden
                 return redirect()->route('orders.show', $order);
