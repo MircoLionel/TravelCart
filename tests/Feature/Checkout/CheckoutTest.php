@@ -102,4 +102,61 @@ class CheckoutTest extends TestCase
         $response->assertSessionHas('error');
         $this->assertDatabaseCount('orders', 0);
     }
+
+    public function test_checkout_decrements_available_capacity(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create();
+        $tour = Tour::factory()->create();
+        $date = TourDate::factory()->for($tour)->create([
+            'capacity' => 10,
+            'available' => 10,
+        ]);
+
+        $cart = Cart::forUserOpen($user);
+        CartItem::create([
+            'cart_id' => $cart->id,
+            'tour_id' => $tour->id,
+            'tour_date_id' => $date->id,
+            'qty' => 4,
+            'unit_price' => 150000,
+            'subtotal' => 600000,
+        ]);
+
+        $this->actingAs($user)->post(route('checkout.place'));
+
+        $this->assertDatabaseHas('orders', ['user_id' => $user->id]);
+        $this->assertSame(6, $date->fresh()->available);
+    }
+
+    public function test_checkout_fails_when_not_enough_seats_available(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create();
+        $tour = Tour::factory()->create(['title' => 'Experiencia Patagonia']);
+        $date = TourDate::factory()->for($tour)->create([
+            'capacity' => 5,
+            'available' => 2,
+        ]);
+
+        $cart = Cart::forUserOpen($user);
+        CartItem::create([
+            'cart_id' => $cart->id,
+            'tour_id' => $tour->id,
+            'tour_date_id' => $date->id,
+            'qty' => 3,
+            'unit_price' => 250000,
+            'subtotal' => 750000,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('checkout.place'));
+
+        $response->assertRedirect(route('cart.show'));
+        $response->assertSessionHas('error', fn ($message) => str_contains($message, 'No hay suficientes cupos disponibles'));
+
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertSame(2, $date->fresh()->available);
+    }
 }
