@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,11 +35,26 @@ class AppServiceProvider extends ServiceProvider
             $databasePath = base_path($databasePath);
         }
 
-        if (File::exists($databasePath)) {
+        $databaseJustCreated = false;
+
+        if (! File::exists($databasePath)) {
+            File::ensureDirectoryExists(dirname($databasePath));
+            File::put($databasePath, '');
+            $databaseJustCreated = true;
+        }
+
+        if (! $databaseJustCreated
+            && Schema::hasTable('migrations')
+            && Schema::hasTable('tours')
+        ) {
             return;
         }
 
-        File::ensureDirectoryExists(dirname($databasePath));
-        File::put($databasePath, '');
+        try {
+            Artisan::call('migrate', ['--force' => true]);
+            Artisan::call('db:seed', ['--force' => true]);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 }
