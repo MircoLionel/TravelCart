@@ -40,6 +40,8 @@ npm install
 npm run dev # o npm run build para producción
 ```
 
+> Si ya cuentas con una base existente (por ejemplo, MySQL con datos reales), ajusta las variables `DB_*` en tu `.env` antes de ejecutar las migraciones para mantener la conexión.
+
 > El seeder genera tours de ejemplo con fechas futuras, cupones y un usuario administrador (`admin@travelcart.test` / `password`) para acceder al panel.
 
 ### Tests
