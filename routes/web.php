@@ -12,6 +12,11 @@ use App\Http\Controllers\Admin\TourAdminController;
 use App\Http\Controllers\Admin\TourDateAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
 use App\Http\Middleware\EnsureApproved;
+use App\Http\Controllers\VendorDirectoryController;
+use App\Http\Controllers\ReservationPassengerController;
+use App\Http\Controllers\Vendor\VendorTourController;
+use App\Http\Controllers\Vendor\VendorBuyerController;
+use App\Http\Controllers\Vendor\VendorReservationController;
 use App\Http\Controllers\Admin\ReportController;
 // Home -> Catálogo
 Route::get('/', fn () => redirect()->route('tours.index'));
@@ -44,6 +49,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
         Route::post('/cart/items', [CartController::class, 'add'])->name('cart.add');
         Route::delete('/cart/items/{item}', [CartController::class, 'remove'])->name('cart.remove');
+
+        // Directorio de proveedores
+        Route::get('/vendors', [VendorDirectoryController::class, 'index'])->name('vendors.index');
+        Route::post('/vendors/{vendor}', [VendorDirectoryController::class, 'requestAccess'])->name('vendors.request');
+
+        // Pasajeros por reserva
+        Route::get('/reservations/{reservation}/passengers', [ReservationPassengerController::class, 'edit'])->name('reservations.passengers.edit');
+        Route::post('/reservations/{reservation}/passengers', [ReservationPassengerController::class, 'store'])->name('reservations.passengers.store');
 
         // Checkout
         Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
@@ -85,6 +98,24 @@ Route::prefix('admin')
         Route::delete('dates/{id}/force', [TourDateAdminController::class, 'forceDelete'])->name('dates.forceDelete');
 
         Route::get('reports/orders.csv', [ReportController::class, 'ordersCsv'])->name('reports.orders.csv');
+    });
+
+// === Vendor (auth + approved + role vendor) ===
+Route::prefix('vendor')
+    ->name('vendor.')
+    ->middleware(['auth', 'approved', 'vendor'])
+    ->group(function () {
+        Route::resource('tours', VendorTourController::class);
+
+        Route::get('buyers', [VendorBuyerController::class, 'index'])->name('buyers.index');
+        Route::post('buyers/{link}/approve', [VendorBuyerController::class, 'approve'])->name('buyers.approve');
+        Route::post('buyers/{link}/reject', [VendorBuyerController::class, 'reject'])->name('buyers.reject');
+
+        Route::get('reservations', [VendorReservationController::class, 'index'])->name('reservations.index');
+        Route::get('reservations/{reservation}', [VendorReservationController::class, 'show'])->name('reservations.show');
+        Route::patch('reservations/{reservation}', [VendorReservationController::class, 'update'])->name('reservations.update');
+        Route::delete('reservations/{reservation}', [VendorReservationController::class, 'destroy'])->name('reservations.destroy');
+        Route::post('reservations/{reservation}/payments', [VendorReservationController::class, 'storePayment'])->name('reservations.payments');
     });
 
 // Breeze auth routes
