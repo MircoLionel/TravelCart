@@ -133,7 +133,7 @@ class VendorReservationController extends Controller
         $this->syncOrderPaymentStatus($reservation->order);
 
         if ($reservation->vendor && $payment) {
-            $reservation->loadMissing(['tour', 'tourDate', 'vendor']);
+            $reservation->loadMissing(['tour', 'tourDate', 'vendor', 'order.user']);
             $pdf = $this->invoicePdf->render($reservation, $payment);
             Mail::to($reservation->vendor->email)->send(new ReservationPaymentReceipt($reservation, $payment, $pdf));
         }

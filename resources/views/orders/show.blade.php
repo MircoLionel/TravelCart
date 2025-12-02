@@ -163,31 +163,49 @@
         @if($order->reservations?->count())
             <div class="mt-6 rounded-xl border border-gray-200 bg-white p-4 space-y-3">
                 <h2 class="text-lg font-semibold">Reservas y pasajeros</h2>
-                <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    @foreach($order->reservations as $reservation)
-                        <div class="rounded-lg border border-gray-100 p-3">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="text-sm text-gray-500">Localizador</div>
-                                    <div class="text-lg font-semibold">{{ $reservation->locator }}</div>
-                                    <div class="text-xs text-gray-600">{{ $reservation->tour?->title }} · {{ $reservation->tourDate?->start_date?->format('d/m/Y') }}</div>
-                                </div>
-                                <div class="w-40">
-                                    <div class="h-2 w-full rounded-full bg-gray-100">
-                                        <div class="h-2 rounded-full bg-indigo-500" style="width: {{ $reservation->paidPercentage() }}%"></div>
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                            @foreach($order->reservations as $reservation)
+                                <div class="rounded-lg border border-gray-100 p-3">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-sm text-gray-500">Localizador</div>
+                                            <div class="text-lg font-semibold">{{ $reservation->locator }}</div>
+                                            <div class="text-xs text-gray-600">{{ $reservation->tour?->title }} · {{ $reservation->tourDate?->start_date?->format('d/m/Y') }}</div>
+                                        </div>
+                                        <div class="w-40">
+                                            <div class="h-2 w-full rounded-full bg-gray-100">
+                                                <div class="h-2 rounded-full bg-indigo-500" style="width: {{ $reservation->paidPercentage() }}%"></div>
+                                            </div>
+                                            <div class="text-xs text-gray-600 text-right">{{ $reservation->paidPercentage() }}% pago</div>
+                                        </div>
                                     </div>
-                                    <div class="text-xs text-gray-600 text-right">{{ $reservation->paidPercentage() }}% pago</div>
+                                    <div class="mt-2 flex items-center justify-between text-sm text-gray-600">
+                                        <span>Pasajeros: {{ $reservation->passengers->count() }} / {{ $reservation->qty }}</span>
+                                        <a class="text-indigo-600 hover:underline" href="{{ route('reservations.passengers.edit', $reservation) }}">Cargar pasajeros</a>
+                                    </div>
+                                    <div class="mt-2 grid grid-cols-1 gap-1 text-xs text-gray-600">
+                                        <div class="flex justify-between">
+                                            <span>Total de la reserva</span>
+                                            <span class="font-semibold">${{ number_format($reservation->total_amount, 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Ganancia vendedor (13%)</span>
+                                            <span class="font-semibold text-indigo-700">${{ number_format($reservation->vendorCommissionAmount(), 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Neto al proveedor</span>
+                                            <span class="font-semibold">${{ number_format($reservation->providerNetAmount(), 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Pagado / Pendiente</span>
+                                            <span class="font-semibold">${{ number_format($reservation->paidAmount(), 0, ',', '.') }} / ${{ number_format($reservation->outstandingAmount(), 0, ',', '.') }}</span>
+                                        </div>
+                                    </div>
+                                    @if($reservation->hold_expires_at)
+                                        <div class="mt-1 text-xs text-amber-700">Tiempo límite: {{ $reservation->hold_expires_at->format('d/m H:i') }}</div>
+                                    @endif
                                 </div>
-                            </div>
-                            <div class="mt-2 flex items-center justify-between text-sm text-gray-600">
-                                <span>Pasajeros: {{ $reservation->passengers->count() }} / {{ $reservation->qty }}</span>
-                                <a class="text-indigo-600 hover:underline" href="{{ route('reservations.passengers.edit', $reservation) }}">Cargar pasajeros</a>
-                            </div>
-                            @if($reservation->hold_expires_at)
-                                <div class="mt-1 text-xs text-amber-700">Tiempo límite: {{ $reservation->hold_expires_at->format('d/m H:i') }}</div>
-                            @endif
-                        </div>
-                    @endforeach
+                            @endforeach
                 </div>
             </div>
         @endif

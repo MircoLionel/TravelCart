@@ -31,6 +31,13 @@
 </div>
 
 <div class="box">
+    <div><strong>Titular de la reserva:</strong> {{ $reservation->order?->user?->name ?? 'Comprador' }}</div>
+    @if($reservation->order?->user?->email)
+        <div class="muted">{{ $reservation->order?->user?->email }}</div>
+    @endif
+</div>
+
+<div class="box">
     <table class="table">
         <tr>
             <th>Concepto</th>
@@ -56,6 +63,10 @@
         <tr>
             <th>Pago aplicado</th>
             <th class="right">${{ number_format($payment->amount, 0, ',', '.') }}</th>
+        </tr>
+        <tr>
+            <td class="muted">A nombre de</td>
+            <td class="right">{{ $reservation->order?->user?->name ?? 'Titular no disponible' }}</td>
         </tr>
         <tr>
             <td class="muted">Fecha</td>

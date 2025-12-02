@@ -5,6 +5,7 @@ namespace Tests\Feature\Reservations;
 use App\Mail\ReservationPaymentReceipt;
 use App\Models\Reservation;
 use App\Models\ReservationPayment;
+use App\Models\Order;
 use App\Models\Tour;
 use App\Models\TourDate;
 use App\Models\User;
@@ -19,10 +20,13 @@ class ReservationPaymentInvoiceTest extends TestCase
     public function test_invoice_pdf_includes_commission_breakdown(): void
     {
         $vendor = User::factory()->vendor()->create();
+        $buyer = User::factory()->create(['name' => 'Ana Compradora']);
         $tour = Tour::factory()->create(['vendor_id' => $vendor->id, 'base_price' => 10000]);
         $date = TourDate::factory()->create(['tour_id' => $tour->id]);
+        $order = Order::factory()->for($buyer)->create();
 
         $reservation = Reservation::factory()->create([
+            'order_id'     => $order->id,
             'vendor_id'     => $vendor->id,
             'tour_id'       => $tour->id,
             'tour_date_id'  => $date->id,
@@ -43,6 +47,7 @@ class ReservationPaymentInvoiceTest extends TestCase
 
         $this->assertStringContainsString('13%', $html);
         $this->assertStringContainsString('8.700', $html); // neto a proveedor
+        $this->assertStringContainsString('Ana Compradora', $html); // titular visible
     }
 
     public function test_manual_payment_sends_invoice_to_vendor(): void
