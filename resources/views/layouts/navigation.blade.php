@@ -1,12 +1,15 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false, dark: document.documentElement.classList.contains('dark') }"
+     @theme-changed.window="dark = $event.detail === 'dark'"
+     class="bg-white/80 border-b border-gray-100/80 backdrop-blur-md dark:bg-gray-900/80 dark:border-gray-800/80">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                <div class="shrink-0 flex items-center gap-3">
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
+                        <x-application-logo class="block h-9 w-auto" />
+                        <span class="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 hidden sm:inline">Welcome Group TravelCart</span>
                     </a>
                 </div>
 
@@ -30,8 +33,8 @@
                                     <button
                                         class="@class([
                                             'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition',
-                                            'border-indigo-400 text-gray-900 focus:border-indigo-700' => $isVendorActive,
-                                            'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300' => ! $isVendorActive,
+                                            'border-indigo-400 text-gray-900 focus:border-indigo-700 dark:text-indigo-100' => $isVendorActive,
+                                            'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-600' => ! $isVendorActive,
                                         ])"
                                     >
                                         Proveedor
@@ -78,8 +81,8 @@
                                 <button
                                     class="@class([
                                         'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition',
-                                        'border-indigo-400 text-gray-900 focus:border-indigo-700' => $isAdminActive,
-                                        'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300' => ! $isAdminActive,
+                                        'border-indigo-400 text-gray-900 focus:border-indigo-700 dark:text-indigo-100' => $isAdminActive,
+                                        'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-600' => ! $isAdminActive,
                                     ])"
                                 >
                                     Admin
@@ -106,7 +109,22 @@
 
             <!-- Settings Dropdown (desktop) -->
             @auth
-                <div class="hidden sm:flex sm:items-center sm:ms-6">
+                <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
+                    <button
+                        @click="window.toggleTheme(); dark = !dark"
+                        type="button"
+                        class="inline-flex items-center justify-center rounded-full bg-gray-100 p-2 text-gray-600 shadow-sm transition hover:scale-105 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:text-amber-300"
+                        :aria-label="dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        title="Alternar modo"
+                    >
+                        <svg x-show="!dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 3a1 1 0 011 1v1a1 1 0 11-2 0V4a1 1 0 011-1zM10 14a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM4.222 5.636a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM13.657 15.071a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM3 10a1 1 0 011-1h1a1 1 0 110 2H4a1 1 0 01-1-1zm11-1a1 1 0 100 2h1a1 1 0 100-2h-1zM6.343 15.071a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM15.778 5.636a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0z" />
+                            <path d="M10 6a4 4 0 100 8 4 4 0 000-8z" />
+                        </svg>
+                        <svg x-show="dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
+                        </svg>
+                    </button>
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -208,6 +226,18 @@
                     Proveedores
                 </x-responsive-nav-link>
             @endcan
+
+            <div class="px-4 flex items-center gap-3">
+                <span class="text-sm text-gray-500 dark:text-gray-300">Modo <span x-text="dark ? 'oscuro' : 'claro'"></span></span>
+                <button
+                    @click="window.toggleTheme(); dark = !dark"
+                    type="button"
+                    class="inline-flex items-center rounded-full bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:scale-105 dark:bg-gray-800 dark:text-gray-100"
+                >
+                    <span x-show="!dark">Activar</span>
+                    <span x-show="dark">Desactivar</span>
+                </button>
+            </div>
         </div>
 
         <!-- Responsive Settings Options -->
