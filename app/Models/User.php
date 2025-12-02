@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Order;
+use App\Models\Tour;
+use App\Models\VendorBuyerLink;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -83,5 +85,28 @@ class User extends Authenticatable
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function vendorTours()
+    {
+        return $this->hasMany(Tour::class, 'vendor_id');
+    }
+
+    public function buyerLinks()
+    {
+        return $this->hasMany(VendorBuyerLink::class, 'buyer_id');
+    }
+
+    public function vendorLinks()
+    {
+        return $this->hasMany(VendorBuyerLink::class, 'vendor_id');
+    }
+
+    public function hasApprovedVendor(int $vendorId): bool
+    {
+        return $this->buyerLinks()
+            ->where('vendor_id', $vendorId)
+            ->where('status', 'approved')
+            ->exists();
     }
 }
