@@ -69,11 +69,17 @@ class CheckoutTest extends TestCase
         $this->assertSame(350000, (int) $order->total);
         $this->assertSame(50000, (int) $order->discount_total);
         $this->assertSame('BONO500', $order->applied_coupon_code);
+        $this->assertSame('awaiting_passengers', $order->status);
 
         $this->assertDatabaseHas('order_items', [
             'order_id' => $order->id,
             'tour_id' => $tour->id,
             'qty' => 2,
+        ]);
+
+        $this->assertDatabaseHas('reservations', [
+            'order_id' => $order->id,
+            'status' => 'awaiting_passengers',
         ]);
 
         $this->assertDatabaseHas('coupon_redemptions', [

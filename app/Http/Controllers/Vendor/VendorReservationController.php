@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\ReservationPayment;
 use App\Models\TourDate;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -47,7 +48,7 @@ class VendorReservationController extends Controller
         $this->ensureOwnership($reservation);
 
         $data = $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled',
+            'status' => 'required|in:awaiting_passengers,pending_payment,pending,confirmed,cancelled',
             'qty'    => 'required|integer|min:1',
         ]);
 
@@ -71,8 +72,14 @@ class VendorReservationController extends Controller
                     $reservation->tourDate()->increment('available', $reservation->qty);
                 }
 
+                if ($data['status'] === 'confirmed' && $reservation->passengers()->count() < $data['qty']) {
+                    throw new \RuntimeException('Necesitás todos los pasajeros cargados antes de confirmar.');
+                }
+
                 $reservation->fill($data);
                 $reservation->save();
+
+                $this->syncOrderPaymentStatus($reservation->order);
             });
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
@@ -88,6 +95,8 @@ class VendorReservationController extends Controller
             $reservation->tourDate()->increment('available', $reservation->qty);
         }
         $reservation->delete();
+
+        $this->syncOrderPaymentStatus($reservation->order);
 
         return redirect()->route('vendor.reservations.index')->with('ok', 'Reserva eliminada y disponibilidad liberada.');
     }
@@ -108,6 +117,14 @@ class VendorReservationController extends Controller
             'note'           => $data['note'] ?? null,
         ]);
 
+        $reservation->load('order');
+        if ($reservation->total_amount && $reservation->paidAmount() >= $reservation->total_amount) {
+            $reservation->status = 'confirmed';
+            $reservation->save();
+        }
+
+        $this->syncOrderPaymentStatus($reservation->order);
+
         return back()->with('ok', 'Pago parcial registrado.');
     }
 
@@ -116,5 +133,24 @@ class VendorReservationController extends Controller
         if ($reservation->vendor_id !== auth()->id()) {
             abort(403);
         }
+    }
+
+    private function syncOrderPaymentStatus(?Order $order): void
+    {
+        if (!$order) {
+            return;
+        }
+
+        $order->load('reservations');
+
+        if ($order->reservations->every(fn ($r) => $r->status === 'confirmed')) {
+            $order->status = 'paid';
+        } elseif ($order->reservations->contains(fn ($r) => $r->status === 'awaiting_passengers')) {
+            $order->status = 'awaiting_passengers';
+        } else {
+            $order->status = 'pending_payment';
+        }
+
+        $order->save();
     }
 }

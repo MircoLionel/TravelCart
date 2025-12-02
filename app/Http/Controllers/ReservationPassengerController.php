@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Models\ReservationPassenger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ReservationPassengerController extends Controller
 {
@@ -34,10 +35,14 @@ class ReservationPassengerController extends Controller
         }
 
         $data = $request->validate([
-            'passengers'   => 'required|array|min:1',
+            'passengers'   => [
+                'required',
+                'array',
+                Rule::size($reservation->qty), // se deben cargar todos los pasajeros
+            ],
             'passengers.*.first_name'      => 'required|string|max:255',
             'passengers.*.last_name'       => 'required|string|max:255',
-            'passengers.*.document_number' => 'required|string|max:50',
+            'passengers.*.document_number' => 'required|string|max:50|distinct',
             'passengers.*.birth_date'      => 'nullable|date',
             'passengers.*.sex'             => 'nullable|string|max:10',
         ]);
@@ -57,9 +62,19 @@ class ReservationPassengerController extends Controller
                     ]
                 );
             }
+
+            $reservation->loadCount('passengers');
+
+            if ($reservation->passengers_count >= $reservation->qty) {
+                $reservation->status = 'pending_payment';
+                $reservation->hold_expires_at = null; // ya completó datos dentro de la ventana
+                $reservation->save();
+            }
+
+            $this->syncOrderStatus($reservation);
         });
 
-        return back()->with('ok', 'Pasajeros guardados.');
+        return back()->with('ok', 'Pasajeros guardados y reserva enviada para pago del proveedor.');
     }
 
     private function authorizeAccess(Reservation $reservation): void
@@ -81,5 +96,27 @@ class ReservationPassengerController extends Controller
         }
         $reservation->status = 'cancelled';
         $reservation->save();
+    }
+
+    private function syncOrderStatus(Reservation $reservation): void
+    {
+        $order = $reservation->order;
+        if (!$order) {
+            return;
+        }
+
+        $order->load('reservations.passengers');
+
+        $awaiting = $order->reservations->contains(fn ($res) =>
+            $res->status === 'awaiting_passengers' || $res->passengers->count() < $res->qty
+        );
+
+        if ($awaiting) {
+            $order->status = 'awaiting_passengers';
+        } else {
+            $order->status = 'pending_payment';
+        }
+
+        $order->save();
     }
 }

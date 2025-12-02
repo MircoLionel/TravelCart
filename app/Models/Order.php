@@ -12,7 +12,7 @@ class Order extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['user_id','code','status','total']; // status: pending|paid|cancelled
+    protected $fillable = ['user_id','code','status','total']; // status: awaiting_passengers|pending_payment|paid|cancelled
 
     public function user(): BelongsTo
     {

@@ -43,6 +43,8 @@
                         $badge = match($order->status) {
                             'paid' => 'bg-green-100 text-green-800',
                             'cancelled' => 'bg-red-100 text-red-800',
+                            'awaiting_passengers' => 'bg-amber-100 text-amber-800',
+                            'pending_payment' => 'bg-blue-100 text-blue-800',
                             default => 'bg-yellow-100 text-yellow-800',
                         };
                     @endphp
@@ -131,8 +133,10 @@
                 </ul>
 
                 <div class="mt-4 space-y-2 text-sm text-gray-600">
-                    @if($order->status === 'pending')
-                        <p>Tu orden está <strong>pendiente</strong>. Podés presentar el voucher cuando el pago esté confirmado.</p>
+                    @if($order->status === 'awaiting_passengers')
+                        <p>Completá todos los pasajeros de cada reserva para confirmar la solicitud antes de que expire el hold.</p>
+                    @elseif($order->status === 'pending_payment')
+                        <p>Datos enviados. El <strong>proveedor</strong> gestiona y carga los pagos manualmente.</p>
                     @elseif($order->status === 'paid')
                         <p>¡Todo listo! Tu orden está <strong>pagada</strong>. Presentá el voucher el día del viaje.</p>
                     @elseif($order->status === 'cancelled')
@@ -148,6 +152,13 @@
                 </div>
             </div>
         </div>
+
+        @if($order->status === 'awaiting_passengers')
+            <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+                Necesitás cargar los datos de los pasajeros para cada reserva antes de que venza el hold de 10 minutos. Hacé clic
+                en "Cargar pasajeros" en cada tarjeta.
+            </div>
+        @endif
 
         @if($order->reservations?->count())
             <div class="mt-6 rounded-xl border border-gray-200 bg-white p-4 space-y-3">

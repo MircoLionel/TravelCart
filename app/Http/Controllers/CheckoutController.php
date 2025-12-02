@@ -108,7 +108,7 @@ class CheckoutController extends Controller
                 $order = new Order();
                 $order->user_id            = $user->id;
                 $order->code               = $this->generateCode();
-                $order->status             = 'paid'; // simulamos pago OK
+                $order->status             = 'awaiting_passengers';
                 $order->total              = $total;
                 $order->discount_total     = $discount;
                 $order->applied_coupon_code= session('cart.coupon_code');
@@ -136,7 +136,7 @@ class CheckoutController extends Controller
                     $reservation->tour_date_id  = $tourDateId;
                     $reservation->vendor_id     = $ci->tour?->vendor_id;
                     $reservation->qty           = (int) $ci->qty;
-                    $reservation->status        = 'pending';
+                    $reservation->status        = 'awaiting_passengers';
                     $reservation->hold_expires_at = now()->addMinutes(10);
                     $reservation->total_amount  = (int) $ci->subtotal;
                     $reservation->locator       = $this->generateCode();
