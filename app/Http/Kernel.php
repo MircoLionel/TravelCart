@@ -55,5 +55,6 @@ class Kernel extends HttpKernel
 
         // Alias opcional (no lo necesitamos si usamos la clase en rutas)
         'approved'         => \App\Http\Middleware\EnsureApproved::class,
+        'vendor'           => \App\Http\Middleware\EnsureVendor::class,
     ];
 }
