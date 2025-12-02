@@ -136,6 +136,34 @@ class CheckoutTest extends TestCase
         $this->assertSame(6, $date->fresh()->available);
     }
 
+    public function test_checkout_requires_vendor_approval(): void
+    {
+        $buyer = User::factory()->create();
+        $vendor = User::factory()->vendor()->create();
+        $tour = Tour::factory()->create(['vendor_id' => $vendor->id]);
+        $date = TourDate::factory()->for($tour)->create([
+            'capacity' => 5,
+            'available' => 5,
+            'price' => 150000,
+        ]);
+
+        $cart = Cart::forUserOpen($buyer);
+        CartItem::create([
+            'cart_id' => $cart->id,
+            'tour_id' => $tour->id,
+            'tour_date_id' => $date->id,
+            'qty' => 1,
+            'unit_price' => 150000,
+            'subtotal' => 150000,
+        ]);
+
+        $response = $this->actingAs($buyer)->post(route('checkout.place'));
+
+        $response->assertRedirect(route('vendors.index'));
+        $response->assertSessionHas('error');
+        $this->assertDatabaseCount('orders', 0);
+    }
+
     public function test_checkout_fails_when_not_enough_seats_available(): void
     {
         Mail::fake();

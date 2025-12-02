@@ -54,6 +54,28 @@ class CartTest extends TestCase
         $this->assertSame(300000, (int) $item->subtotal);
     }
 
+    public function test_buyer_needs_vendor_approval_to_add_item(): void
+    {
+        $buyer = User::factory()->create();
+        $vendor = User::factory()->vendor()->create();
+        $tour = Tour::factory()->create(['vendor_id' => $vendor->id]);
+        $date = TourDate::factory()->for($tour)->create([
+            'capacity' => 5,
+            'available' => 5,
+            'price' => 100000,
+        ]);
+
+        $response = $this->actingAs($buyer)->post(route('cart.add'), [
+            'tour_id' => $tour->id,
+            'tour_date_id' => $date->id,
+            'qty' => 1,
+        ]);
+
+        $response->assertRedirect(route('vendors.index'));
+        $response->assertSessionHas('error');
+        $this->assertDatabaseCount('cart_items', 0);
+    }
+
     public function test_cannot_add_more_items_than_available(): void
     {
         $user = User::factory()->create();

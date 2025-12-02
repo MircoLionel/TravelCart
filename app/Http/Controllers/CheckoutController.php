@@ -59,6 +59,15 @@ class CheckoutController extends Controller
             return redirect()->route('cart.show')->with('error', 'Tu carrito está vacío.');
         }
 
+        foreach ($cart->items as $item) {
+            $vendorId = $item->tour?->vendor_id;
+            if ($vendorId && ! $user->hasApprovedVendor((int) $vendorId)) {
+                return redirect()
+                    ->route('vendors.index')
+                    ->with('error', 'El proveedor del viaje aún no aprobó tu legajo. Solicita acceso antes de completar la compra.');
+            }
+        }
+
         try {
             return DB::transaction(function () use ($request, $user, $cart) {
                 $lockedDates = [];

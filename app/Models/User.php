@@ -101,4 +101,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(VendorBuyerLink::class, 'vendor_id');
     }
+
+    public function hasApprovedVendor(int $vendorId): bool
+    {
+        return $this->buyerLinks()
+            ->where('vendor_id', $vendorId)
+            ->where('status', 'approved')
+            ->exists();
+    }
 }
