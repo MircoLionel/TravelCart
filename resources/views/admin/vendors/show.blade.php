@@ -42,7 +42,7 @@
                     <div>
                         <div class="flex items-center justify-between text-xs text-gray-600">
                             <span>Ingresos</span>
-                            <span>${{ number_format($tour->sales_amount ?? 0,0,',','.') }}</span>
+                            <span data-raw-amount="{{ $tour->sales_amount ?? 0 }}">${{ number_format($tour->sales_amount ?? 0,0,',','.') }}</span>
                         </div>
                         <div class="mt-1 h-2 w-full rounded-full bg-emerald-100">
                             <div class="h-2 rounded-full bg-emerald-500" style="width: {{ $amountPercent }}%"></div>
