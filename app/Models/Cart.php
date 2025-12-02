@@ -6,6 +6,7 @@ use App\Models\CartItem;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 
 class Cart extends Model
 {
@@ -28,16 +29,23 @@ class Cart extends Model
     {
         $cart = static::withCount('items')
             ->where('user_id', $user->id)
-            ->where('status', 'open')
+            ->whereIn('status', ['open', 'pending'])
             ->orderByDesc('items_count')
             ->orderByDesc('id')
             ->first();
 
         if (! $cart) {
-            $cart = static::create([
-                'user_id' => $user->id,
-                'status'  => 'open',
-            ]);
+            try {
+                $cart = static::create([
+                    'user_id' => $user->id,
+                    'status'  => 'open',
+                ]);
+            } catch (QueryException $e) {
+                $cart = static::create([
+                    'user_id' => $user->id,
+                    'status'  => 'pending',
+                ]);
+            }
         }
 
         return $cart;
