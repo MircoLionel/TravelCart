@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class VendorAccessApproved extends Notification
 {
@@ -16,7 +17,7 @@ class VendorAccessApproved extends Notification
 
     public function via($notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toArray($notifiable): array
@@ -24,5 +25,10 @@ class VendorAccessApproved extends Notification
         return [
             'message' => "Tu proveedor {$this->vendor->name} aprobó tu acceso.",
         ];
+    }
+
+    public function toBroadcast($notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage($this->toArray($notifiable));
     }
 }

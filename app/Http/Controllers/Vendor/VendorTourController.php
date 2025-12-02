@@ -36,6 +36,7 @@ class VendorTourController extends Controller
     public function edit(Tour $tour)
     {
         $this->ensureOwnership($tour);
+        $tour->load(['dates' => fn ($q) => $q->orderBy('start_date')]);
         return view('vendor.tours.edit', compact('tour'));
     }
 

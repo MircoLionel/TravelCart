@@ -33,7 +33,7 @@ class VendorDirectoryController extends Controller
         }
 
         $data = $request->validate([
-            'legajo' => 'nullable|string|max:50',
+            'legajo' => 'required|string|max:50',
         ]);
 
         $link = VendorBuyerLink::updateOrCreate(

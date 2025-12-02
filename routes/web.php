@@ -15,6 +15,7 @@ use App\Http\Middleware\EnsureApproved;
 use App\Http\Controllers\VendorDirectoryController;
 use App\Http\Controllers\ReservationPassengerController;
 use App\Http\Controllers\Vendor\VendorTourController;
+use App\Http\Controllers\Vendor\VendorTourDateController;
 use App\Http\Controllers\Vendor\VendorBuyerController;
 use App\Http\Controllers\Vendor\VendorReservationController;
 use App\Http\Controllers\Admin\ReportController;
@@ -106,6 +107,9 @@ Route::prefix('vendor')
     ->middleware(['auth', 'approved', 'vendor'])
     ->group(function () {
         Route::resource('tours', VendorTourController::class);
+        Route::post('tours/{tour}/dates', [VendorTourDateController::class, 'store'])->name('tours.dates.store');
+        Route::patch('tours/{tour}/dates/{date}', [VendorTourDateController::class, 'update'])->name('tours.dates.update');
+        Route::delete('tours/{tour}/dates/{date}', [VendorTourDateController::class, 'destroy'])->name('tours.dates.destroy');
 
         Route::get('buyers', [VendorBuyerController::class, 'index'])->name('buyers.index');
         Route::post('buyers/{link}/approve', [VendorBuyerController::class, 'approve'])->name('buyers.approve');
