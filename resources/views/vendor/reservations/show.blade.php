@@ -21,6 +21,11 @@
                     <div class="text-lg font-semibold">{{ $reservation->tour?->title }}</div>
                     <div class="text-sm text-gray-600">{{ $reservation->tourDate?->start_date?->format('d/m/Y') }} → {{ $reservation->tourDate?->end_date?->format('d/m/Y') }}</div>
                 </div>
+                <div class="text-right">
+                    <div class="text-xs text-gray-500">Comisión vendedor (13%)</div>
+                    <div class="text-lg font-semibold text-indigo-700">${{ number_format($reservation->vendorCommissionAmount(),0,',','.') }}</div>
+                    <div class="text-xs text-gray-500">Neto a proveedor: ${{ number_format($reservation->providerNetAmount(),0,',','.') }}</div>
+                </div>
                 <div class="w-64">
                     <div class="text-xs text-gray-500">Pago</div>
                     <div class="h-2 w-full rounded-full bg-gray-100">

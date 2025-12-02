@@ -7,11 +7,18 @@ use App\Models\Reservation;
 use App\Models\ReservationPayment;
 use App\Models\TourDate;
 use App\Models\Order;
+use App\Mail\ReservationPaymentReceipt;
+use App\Services\ReservationPaymentInvoicePdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 
 class VendorReservationController extends Controller
 {
+    public function __construct(private ReservationPaymentInvoicePdf $invoicePdf)
+    {
+    }
+
     public function index(Request $request)
     {
         $vendor = $request->user();
@@ -110,7 +117,7 @@ class VendorReservationController extends Controller
             'note'   => 'nullable|string|max:255',
         ]);
 
-        ReservationPayment::create([
+        $payment = ReservationPayment::create([
             'reservation_id' => $reservation->id,
             'vendor_id'      => $request->user()->id,
             'amount'         => $data['amount'],
@@ -124,6 +131,12 @@ class VendorReservationController extends Controller
         }
 
         $this->syncOrderPaymentStatus($reservation->order);
+
+        if ($reservation->vendor && $payment) {
+            $reservation->loadMissing(['tour', 'tourDate', 'vendor']);
+            $pdf = $this->invoicePdf->render($reservation, $payment);
+            Mail::to($reservation->vendor->email)->send(new ReservationPaymentReceipt($reservation, $payment, $pdf));
+        }
 
         return back()->with('ok', 'Pago parcial registrado.');
     }

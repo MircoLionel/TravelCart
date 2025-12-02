@@ -63,4 +63,28 @@ class Reservation extends Model
 
         return (int) min(100, round(($this->paidAmount() / $this->total_amount) * 100));
     }
+
+    public function vendorCommissionRate(): float
+    {
+        return 0.13;
+    }
+
+    public function vendorCommissionAmount(): int
+    {
+        if (!$this->total_amount) {
+            return 0;
+        }
+
+        return (int) round($this->total_amount * $this->vendorCommissionRate());
+    }
+
+    public function providerNetAmount(): int
+    {
+        return max(0, (int) $this->total_amount - $this->vendorCommissionAmount());
+    }
+
+    public function outstandingAmount(): int
+    {
+        return max(0, (int) $this->providerNetAmount() - $this->paidAmount());
+    }
 }

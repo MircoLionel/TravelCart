@@ -19,6 +19,7 @@
                             <h2 class="text-lg font-semibold">{{ $tour->title }}</h2>
                             <p class="text-sm text-gray-600">{{ $tour->destination }}</p>
                             <p class="text-sm text-gray-600">${{ number_format($tour->base_price,0,',','.') }}</p>
+                            <p class="text-xs text-indigo-700">Ganancia vendedor (13%): ${{ number_format($tour->base_price * 0.13,0,',','.') }}</p>
                         </div>
                         <a href="{{ route('vendor.tours.edit', $tour) }}" class="text-indigo-600 hover:underline">Editar</a>
                     </div>
