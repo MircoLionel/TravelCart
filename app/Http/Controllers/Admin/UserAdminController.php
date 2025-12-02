@@ -14,6 +14,13 @@ class UserAdminController extends Controller
     {
         $q = trim((string) $request->get('q', ''));
 
+        $pendingCount = User::query()
+            ->where(function ($query) {
+                $query->whereNull('role')
+                    ->orWhere('is_approved', false);
+            })
+            ->count();
+
         $users = User::query()
             ->when($q, function ($query) use ($q) {
                 $query->where(function ($qB) use ($q) {
@@ -22,11 +29,13 @@ class UserAdminController extends Controller
                        ->orWhere('legajo', 'like', "%{$q}%");
                 });
             })
+            ->orderByRaw('CASE WHEN role IS NULL THEN 0 ELSE 1 END')
+            ->orderBy('is_approved')
             ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.users.index', compact('users', 'q'));
+        return view('admin.users.index', compact('users', 'q', 'pendingCount'));
     }
 
     // Opcional: si tenés vista de edición individual
