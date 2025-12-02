@@ -43,10 +43,20 @@ class CartController extends Controller
 
         $cart = Cart::forUserOpen($request->user());
 
-        return DB::transaction(function () use ($cart, $data, $dateId, $dateCol) {
+        return DB::transaction(function () use ($cart, $data, $dateId, $dateCol, $request) {
 
             /** @var \App\Models\TourDate $date */
-            $date = TourDate::whereKey($dateId)->lockForUpdate()->firstOrFail();
+            $date = TourDate::whereKey($dateId)
+                ->lockForUpdate()
+                ->with('tour')
+                ->firstOrFail();
+
+            $vendorId = $date->tour?->vendor_id;
+            if ($vendorId && ! $request->user()->hasApprovedVendor((int) $vendorId)) {
+                return redirect()
+                    ->route('vendors.index')
+                    ->with('error', 'Este proveedor aún no te aprobó. Solicita acceso antes de reservar sus viajes.');
+            }
 
             if (! $date->is_active) {
                 return back()->with('error','La fecha no está activa.');
