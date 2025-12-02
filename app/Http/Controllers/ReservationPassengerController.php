@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Models\ReservationPassenger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class ReservationPassengerController extends Controller
 {
@@ -33,7 +34,7 @@ class ReservationPassengerController extends Controller
             return back()->with('error', 'La reserva expiró, solicitá una nueva.');
         }
 
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'passengers'   => [
                 'required',
                 'array',
@@ -45,6 +46,30 @@ class ReservationPassengerController extends Controller
             'passengers.*.birth_date'      => 'nullable|date',
             'passengers.*.sex'             => 'nullable|string|max:10',
         ]);
+
+        $validator->after(function ($validator) use ($reservation) {
+            $passengers = $validator->validated()['passengers'] ?? [];
+
+            foreach ($passengers as $index => $passenger) {
+                $existsInTour = ReservationPassenger::where('document_number', $passenger['document_number'])
+                    ->where('reservation_id', '!=', $reservation->id)
+                    ->whereHas('reservation', function ($query) use ($reservation) {
+                        $query->where('tour_id', $reservation->tour_id)
+                            ->where('tour_date_id', $reservation->tour_date_id)
+                            ->where('status', '!=', 'cancelled');
+                    })
+                    ->exists();
+
+                if ($existsInTour) {
+                    $validator->errors()->add(
+                        "passengers.$index.document_number",
+                        'Este pasajero ya está registrado en este tour.'
+                    );
+                }
+            }
+        });
+
+        $data = $validator->validate();
 
         DB::transaction(function () use ($reservation, $data) {
             foreach ($data['passengers'] as $passengerData) {
