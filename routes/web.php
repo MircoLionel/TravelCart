@@ -8,6 +8,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Admin\UserAdminController;
 use App\Http\Controllers\Admin\VendorAdminController;
 use App\Http\Middleware\EnsureApproved;
 use App\Http\Controllers\VendorDirectoryController;
@@ -78,27 +79,11 @@ Route::prefix('admin')
         // Administración de proveedores
         Route::get('vendors', [VendorAdminController::class, 'index'])->name('vendors.index');
         Route::patch('vendors/{vendor}', [VendorAdminController::class, 'update'])->name('vendors.update');
-    });
 
-// === Vendor (auth + approved + role vendor) ===
-Route::prefix('vendor')
-    ->name('vendor.')
-    ->middleware(['auth', 'approved', 'vendor'])
-    ->group(function () {
-        Route::resource('tours', VendorTourController::class);
-        Route::post('tours/{tour}/dates', [VendorTourDateController::class, 'store'])->name('tours.dates.store');
-        Route::patch('tours/{tour}/dates/{date}', [VendorTourDateController::class, 'update'])->name('tours.dates.update');
-        Route::delete('tours/{tour}/dates/{date}', [VendorTourDateController::class, 'destroy'])->name('tours.dates.destroy');
-
-        Route::get('buyers', [VendorBuyerController::class, 'index'])->name('buyers.index');
-        Route::post('buyers/{link}/approve', [VendorBuyerController::class, 'approve'])->name('buyers.approve');
-        Route::post('buyers/{link}/reject', [VendorBuyerController::class, 'reject'])->name('buyers.reject');
-
-        Route::get('reservations', [VendorReservationController::class, 'index'])->name('reservations.index');
-        Route::get('reservations/{reservation}', [VendorReservationController::class, 'show'])->name('reservations.show');
-        Route::patch('reservations/{reservation}', [VendorReservationController::class, 'update'])->name('reservations.update');
-        Route::delete('reservations/{reservation}', [VendorReservationController::class, 'destroy'])->name('reservations.destroy');
-        Route::post('reservations/{reservation}/payments', [VendorReservationController::class, 'storePayment'])->name('reservations.payments');
+        // Administración de usuarios (compatibilidad con pruebas existentes)
+        Route::get('users', [UserAdminController::class, 'index'])->name('users.index');
+        Route::get('users/{user}/edit', [UserAdminController::class, 'edit'])->name('users.edit');
+        Route::patch('users/{user}', [UserAdminController::class, 'update'])->name('users.update');
     });
 
 // === Vendor (auth + approved + role vendor) ===
