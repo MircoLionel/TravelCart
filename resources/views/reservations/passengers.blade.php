@@ -13,6 +13,16 @@
         @if(session('error'))
             <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-red-800">{{ session('error') }}</div>
         @endif
+        @if($errors->any())
+            <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-red-800">
+                <p class="font-semibold">Revisá los datos de los pasajeros:</p>
+                <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <form method="POST" action="{{ route('reservations.passengers.store', $reservation) }}" class="space-y-4">
             @csrf
@@ -22,16 +32,41 @@
                 <div class="rounded-lg border border-gray-200 bg-white p-4 space-y-2">
                     <h3 class="text-sm font-semibold text-gray-800">Pasajero {{ $i+1 }}</h3>
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <input type="text" name="passengers[{{ $i }}][first_name]" placeholder="Nombre" value="{{ old("passengers.$i.first_name", optional($existing)->first_name) }}" class="rounded border-gray-300" required>
-                        <input type="text" name="passengers[{{ $i }}][last_name]" placeholder="Apellido" value="{{ old("passengers.$i.last_name", optional($existing)->last_name) }}" class="rounded border-gray-300" required>
-                        <input type="text" name="passengers[{{ $i }}][document_number]" placeholder="Documento" value="{{ old("passengers.$i.document_number", optional($existing)->document_number) }}" class="rounded border-gray-300" required>
-                        <input type="date" name="passengers[{{ $i }}][birth_date]" value="{{ old("passengers.$i.birth_date", optional(optional($existing)->birth_date)->format('Y-m-d')) }}" class="rounded border-gray-300">
-                        <select name="passengers[{{ $i }}][sex]" class="rounded border-gray-300">
+                        <div class="space-y-1">
+                            <input type="text" name="passengers[{{ $i }}][first_name]" placeholder="Nombre" value="{{ old("passengers.$i.first_name", optional($existing)->first_name) }}" class="w-full rounded border-gray-300" required>
+                            @error("passengers.$i.first_name")
+                                <p class="text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="space-y-1">
+                            <input type="text" name="passengers[{{ $i }}][last_name]" placeholder="Apellido" value="{{ old("passengers.$i.last_name", optional($existing)->last_name) }}" class="w-full rounded border-gray-300" required>
+                            @error("passengers.$i.last_name")
+                                <p class="text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="space-y-1">
+                            <input type="text" name="passengers[{{ $i }}][document_number]" placeholder="Documento" value="{{ old("passengers.$i.document_number", optional($existing)->document_number) }}" class="w-full rounded border-gray-300" required>
+                            @error("passengers.$i.document_number")
+                                <p class="text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="space-y-1">
+                            <input type="date" name="passengers[{{ $i }}][birth_date]" value="{{ old("passengers.$i.birth_date", optional(optional($existing)->birth_date)->format('Y-m-d')) }}" class="w-full rounded border-gray-300">
+                            @error("passengers.$i.birth_date")
+                                <p class="text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="space-y-1">
+                            <select name="passengers[{{ $i }}][sex]" class="w-full rounded border-gray-300">
                             <option value="">Sexo</option>
                             <option value="M" @selected(old("passengers.$i.sex", optional($existing)->sex) === 'M')>M</option>
                             <option value="F" @selected(old("passengers.$i.sex", optional($existing)->sex) === 'F')>F</option>
                             <option value="X" @selected(old("passengers.$i.sex", optional($existing)->sex) === 'X')>X</option>
-                        </select>
+                            </select>
+                            @error("passengers.$i.sex")
+                                <p class="text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
                 </div>
             @endfor
