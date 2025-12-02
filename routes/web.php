@@ -101,5 +101,26 @@ Route::prefix('vendor')
         Route::post('reservations/{reservation}/payments', [VendorReservationController::class, 'storePayment'])->name('reservations.payments');
     });
 
+// === Vendor (auth + approved + role vendor) ===
+Route::prefix('vendor')
+    ->name('vendor.')
+    ->middleware(['auth', 'approved', 'vendor'])
+    ->group(function () {
+        Route::resource('tours', VendorTourController::class);
+        Route::post('tours/{tour}/dates', [VendorTourDateController::class, 'store'])->name('tours.dates.store');
+        Route::patch('tours/{tour}/dates/{date}', [VendorTourDateController::class, 'update'])->name('tours.dates.update');
+        Route::delete('tours/{tour}/dates/{date}', [VendorTourDateController::class, 'destroy'])->name('tours.dates.destroy');
+
+        Route::get('buyers', [VendorBuyerController::class, 'index'])->name('buyers.index');
+        Route::post('buyers/{link}/approve', [VendorBuyerController::class, 'approve'])->name('buyers.approve');
+        Route::post('buyers/{link}/reject', [VendorBuyerController::class, 'reject'])->name('buyers.reject');
+
+        Route::get('reservations', [VendorReservationController::class, 'index'])->name('reservations.index');
+        Route::get('reservations/{reservation}', [VendorReservationController::class, 'show'])->name('reservations.show');
+        Route::patch('reservations/{reservation}', [VendorReservationController::class, 'update'])->name('reservations.update');
+        Route::delete('reservations/{reservation}', [VendorReservationController::class, 'destroy'])->name('reservations.destroy');
+        Route::post('reservations/{reservation}/payments', [VendorReservationController::class, 'storePayment'])->name('reservations.payments');
+    });
+
 // Breeze auth routes
 require __DIR__.'/auth.php';
