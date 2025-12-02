@@ -10,7 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             TourSeeder::class,
-            CouponSeeder::class, // ⬅️ agrega esta línea
+            CouponSeeder::class,
         ]);
     }
 }
