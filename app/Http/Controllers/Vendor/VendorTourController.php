@@ -4,16 +4,30 @@ namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tour;
+use App\Models\ReservationPassenger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 
 class VendorTourController extends Controller
 {
     public function index(Request $request)
     {
         $vendor = $request->user();
-        $tours = $vendor->vendorTours()->orderByDesc('id')->get();
+        $tours = $vendor->vendorTours()
+            ->withCount(['reservations as sales_count' => function ($q) {
+                $q->whereNull('reservations.deleted_at');
+            }])
+            ->withSum(['reservations as sales_amount' => function ($q) {
+                $q->whereNull('reservations.deleted_at');
+            }], 'total_amount')
+            ->orderByDesc('id')
+            ->get();
 
-        return view('vendor.tours.index', compact('tours'));
+        $maxCount = max(1, (int) $tours->max('sales_count'));
+        $maxAmount = max(1, (int) $tours->max('sales_amount'));
+
+        return view('vendor.tours.index', compact('tours', 'maxCount', 'maxAmount'));
     }
 
     public function create()
@@ -56,6 +70,50 @@ class VendorTourController extends Controller
         $tour->delete();
 
         return back()->with('ok', 'Viaje eliminado.');
+    }
+
+    public function exportPassengers(Tour $tour)
+    {
+        $this->ensureOwnership($tour);
+
+        $passengers = ReservationPassenger::query()
+            ->selectRaw('tour_dates.start_date as start_date, reservations.locator, reservation_passengers.first_name, reservation_passengers.last_name, reservation_passengers.document_number, reservation_passengers.birth_date, reservation_passengers.sex, users.name as buyer_name, users.email as buyer_email')
+            ->join('reservations', 'reservations.id', '=', 'reservation_passengers.reservation_id')
+            ->leftJoin('tour_dates', 'tour_dates.id', '=', 'reservations.tour_date_id')
+            ->leftJoin('orders', 'orders.id', '=', 'reservations.order_id')
+            ->leftJoin('users', 'users.id', '=', 'orders.user_id')
+            ->where('reservations.tour_id', $tour->id)
+            ->whereNull('reservations.deleted_at')
+            ->orderBy('tour_dates.start_date')
+            ->orderBy('reservation_passengers.last_name')
+            ->get();
+
+        $lines = [
+            'Fecha de salida\tLocalizador\tPasajero\tDocumento\tNacimiento\tSexo\tComprador\tEmail comprador',
+        ];
+
+        foreach ($passengers as $passenger) {
+            $startDate = $passenger->start_date ? Carbon::parse($passenger->start_date)->format('Y-m-d') : '';
+            $birthDate = $passenger->birth_date ? Carbon::parse($passenger->birth_date)->format('Y-m-d') : '';
+
+            $lines[] = collect([
+                $startDate,
+                $passenger->locator,
+                trim($passenger->first_name . ' ' . $passenger->last_name),
+                $passenger->document_number,
+                $birthDate,
+                $passenger->sex,
+                $passenger->buyer_name,
+                $passenger->buyer_email,
+            ])->implode("\t");
+        }
+
+        $content = implode("\n", $lines);
+        $filename = 'pasajeros_' . Str::slug($tour->title ?: 'tour') . '.xls';
+
+        return response($content)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 
     private function validatedData(Request $request): array

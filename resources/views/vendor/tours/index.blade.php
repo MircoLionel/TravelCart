@@ -23,6 +23,40 @@
                         </div>
                         <a href="{{ route('vendor.tours.edit', $tour) }}" class="text-indigo-600 hover:underline">Editar</a>
                     </div>
+
+                    <div class="mt-4 space-y-3">
+                        @php
+                            $countPercent = $tour->sales_count ? min(100, round(($tour->sales_count / $maxCount) * 100)) : 0;
+                            $amountPercent = $tour->sales_amount ? min(100, round(($tour->sales_amount / $maxAmount) * 100)) : 0;
+                            $vendorGain = (int) round(($tour->sales_amount ?? 0) * 0.13);
+                        @endphp
+
+                        <div>
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span>Ventas</span>
+                                <span>{{ $tour->sales_count }} reservas</span>
+                            </div>
+                            <div class="mt-1 h-2 w-full rounded-full bg-gray-100">
+                                <div class="h-2 rounded-full bg-indigo-500" style="width: {{ $countPercent }}%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span>Ingresos (total)</span>
+                                <span>${{ number_format($tour->sales_amount ?? 0,0,',','.') }}</span>
+                            </div>
+                            <div class="mt-1 h-2 w-full rounded-full bg-emerald-100">
+                                <div class="h-2 rounded-full bg-emerald-500" style="width: {{ $amountPercent }}%"></div>
+                            </div>
+                            <p class="mt-1 text-xs text-indigo-700">Ganancia 13%: ${{ number_format($vendorGain,0,',','.') }}</p>
+                        </div>
+
+                        <div class="flex items-center gap-3 text-sm">
+                            <a class="text-indigo-600 hover:underline" href="{{ route('vendor.tours.passengers.export', $tour) }}">Descargar pasajeros (.xls)</a>
+                            <a class="text-indigo-600 hover:underline" href="{{ route('vendor.reservations.index', ['q' => $tour->title]) }}">Ver reservas</a>
+                        </div>
+                    </div>
                 </div>
             @empty
                 <p class="text-gray-600">Aún no creaste viajes.</p>

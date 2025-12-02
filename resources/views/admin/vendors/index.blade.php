@@ -29,6 +29,7 @@
                             <th class="px-4 py-2 text-left">Legajo</th>
                             <th class="px-4 py-2 text-left">Aprobado</th>
                             <th class="px-4 py-2"></th>
+                            <th class="px-4 py-2"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,6 +58,9 @@
                                 <td class="px-4 py-2 text-right">
                                         <button class="px-3 py-1 bg-indigo-600 text-white rounded">Guardar</button>
                                     </form>
+                                </td>
+                                <td class="px-4 py-2 text-right">
+                                    <a class="text-indigo-600 hover:underline" href="{{ route('admin.vendors.show', $vendor) }}">Ver métricas</a>
                                 </td>
                             </tr>
                         @empty

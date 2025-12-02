@@ -78,7 +78,9 @@ Route::prefix('admin')
 
         // Administración de proveedores
         Route::get('vendors', [VendorAdminController::class, 'index'])->name('vendors.index');
+        Route::get('vendors/{vendor}', [VendorAdminController::class, 'show'])->name('vendors.show');
         Route::patch('vendors/{vendor}', [VendorAdminController::class, 'update'])->name('vendors.update');
+        Route::get('vendors/{vendor}/passengers', [VendorAdminController::class, 'exportPassengers'])->name('vendors.passengers');
 
         // Administración de usuarios (compatibilidad con pruebas existentes)
         Route::get('users', [UserAdminController::class, 'index'])->name('users.index');
@@ -91,6 +93,7 @@ Route::prefix('vendor')
     ->name('vendor.')
     ->middleware(['auth', 'approved', 'vendor'])
     ->group(function () {
+        Route::get('tours/{tour}/passengers/export', [VendorTourController::class, 'exportPassengers'])->name('tours.passengers.export');
         Route::resource('tours', VendorTourController::class);
         Route::post('tours/{tour}/dates', [VendorTourDateController::class, 'store'])->name('tours.dates.store');
         Route::patch('tours/{tour}/dates/{date}', [VendorTourDateController::class, 'update'])->name('tours.dates.update');
