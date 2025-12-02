@@ -18,7 +18,11 @@ class ReservationPaymentReceipt extends Mailable
 
     public function build()
     {
+        $fromAddress = config('mail.from.address') ?: 'no-reply@travelcart.test';
+        $fromName = config('mail.from.name') ?: config('app.name');
+
         return $this
+            ->from($fromAddress, $fromName)
             ->subject('Comprobante de pago de reserva '.$this->reservation->locator)
             ->view('emails.reservations.payment_receipt')
             ->attachData($this->pdf, 'factura-'.$this->payment->id.'.pdf', [
