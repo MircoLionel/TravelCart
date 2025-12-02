@@ -8,9 +8,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\Admin\TourAdminController;
-use App\Http\Controllers\Admin\TourDateAdminController;
-use App\Http\Controllers\Admin\UserAdminController;
+use App\Http\Controllers\Admin\VendorAdminController;
 use App\Http\Middleware\EnsureApproved;
 use App\Http\Controllers\VendorDirectoryController;
 use App\Http\Controllers\ReservationPassengerController;
@@ -18,7 +16,6 @@ use App\Http\Controllers\Vendor\VendorTourController;
 use App\Http\Controllers\Vendor\VendorTourDateController;
 use App\Http\Controllers\Vendor\VendorBuyerController;
 use App\Http\Controllers\Vendor\VendorReservationController;
-use App\Http\Controllers\Admin\ReportController;
 // Home -> Catálogo
 Route::get('/', fn () => redirect()->route('tours.index'));
 
@@ -78,27 +75,30 @@ Route::prefix('admin')
 
         Route::get('test', fn () => 'OK ADMIN')->name('ping');
 
-        // Usuarios —> (NUEVO) rutas necesarias para el menú "admin.users.index"
-        Route::get('users', [UserAdminController::class, 'index'])->name('users.index');
-        Route::patch('users/{user}', [UserAdminController::class, 'update'])->name('users.update');
+        // Administración de proveedores
+        Route::get('vendors', [VendorAdminController::class, 'index'])->name('vendors.index');
+        Route::patch('vendors/{vendor}', [VendorAdminController::class, 'update'])->name('vendors.update');
+    });
 
-        // CRUD de Tours
-        Route::resource('tours', TourAdminController::class)->except(['show']);
+// === Vendor (auth + approved + role vendor) ===
+Route::prefix('vendor')
+    ->name('vendor.')
+    ->middleware(['auth', 'approved', 'vendor'])
+    ->group(function () {
+        Route::resource('tours', VendorTourController::class);
+        Route::post('tours/{tour}/dates', [VendorTourDateController::class, 'store'])->name('tours.dates.store');
+        Route::patch('tours/{tour}/dates/{date}', [VendorTourDateController::class, 'update'])->name('tours.dates.update');
+        Route::delete('tours/{tour}/dates/{date}', [VendorTourDateController::class, 'destroy'])->name('tours.dates.destroy');
 
-        // Fechas anidadas (con shallow)
-        Route::resource('tours.dates', TourDateAdminController::class)
-            ->shallow()
-            ->except(['show', 'index']);
+        Route::get('buyers', [VendorBuyerController::class, 'index'])->name('buyers.index');
+        Route::post('buyers/{link}/approve', [VendorBuyerController::class, 'approve'])->name('buyers.approve');
+        Route::post('buyers/{link}/reject', [VendorBuyerController::class, 'reject'])->name('buyers.reject');
 
-        // Soft delete helpers — Tours
-        Route::post('tours/{id}/restore', [TourAdminController::class, 'restore'])->name('tours.restore');
-        Route::delete('tours/{id}/force', [TourAdminController::class, 'forceDelete'])->name('tours.forceDelete');
-
-        // Soft delete helpers — Dates
-        Route::post('dates/{id}/restore', [TourDateAdminController::class, 'restore'])->name('dates.restore');
-        Route::delete('dates/{id}/force', [TourDateAdminController::class, 'forceDelete'])->name('dates.forceDelete');
-
-        Route::get('reports/orders.csv', [ReportController::class, 'ordersCsv'])->name('reports.orders.csv');
+        Route::get('reservations', [VendorReservationController::class, 'index'])->name('reservations.index');
+        Route::get('reservations/{reservation}', [VendorReservationController::class, 'show'])->name('reservations.show');
+        Route::patch('reservations/{reservation}', [VendorReservationController::class, 'update'])->name('reservations.update');
+        Route::delete('reservations/{reservation}', [VendorReservationController::class, 'destroy'])->name('reservations.destroy');
+        Route::post('reservations/{reservation}/payments', [VendorReservationController::class, 'storePayment'])->name('reservations.payments');
     });
 
 // === Vendor (auth + approved + role vendor) ===
