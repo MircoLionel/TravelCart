@@ -6,6 +6,7 @@ use App\Mail\OrderConfirmed;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Reservation;
 use App\Models\TourDate;
 use App\Models\CouponRedemption;
 use Illuminate\Http\Request;
@@ -128,6 +129,18 @@ class CheckoutController extends Controller
                     if ($tourDateId && isset($lockedDates[$tourDateId])) {
                         $lockedDates[$tourDateId]->decrement('available', (int) $ci->qty);
                     }
+
+                    $reservation = new Reservation();
+                    $reservation->order_id      = $order->id;
+                    $reservation->tour_id       = $ci->tour_id;
+                    $reservation->tour_date_id  = $tourDateId;
+                    $reservation->vendor_id     = $ci->tour?->vendor_id;
+                    $reservation->qty           = (int) $ci->qty;
+                    $reservation->status        = 'pending';
+                    $reservation->hold_expires_at = now()->addMinutes(10);
+                    $reservation->total_amount  = (int) $ci->subtotal;
+                    $reservation->locator       = $this->generateCode();
+                    $reservation->save();
                 }
 
                 // 3) Registrar redención de cupón (si aplica)
