@@ -18,15 +18,29 @@ class VendorAnalyticsTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
         $vendor = User::factory()->create(['role' => 'vendor', 'is_approved' => true, 'legajo' => 'VEN-100']);
+        $buyerOne = User::factory()->create(['name' => 'Comprador Uno']);
+        $buyerTwo = User::factory()->create(['name' => 'Comprador Dos']);
         $tour = Tour::factory()->create(['vendor_id' => $vendor->id, 'title' => 'Tour Andes']);
-        $date = TourDate::factory()->create(['tour_id' => $tour->id]);
+        $date = TourDate::factory()->create(['tour_id' => $tour->id, 'capacity' => 5]);
 
         $reservation = Reservation::factory()
             ->for($tour, 'tour')
             ->for($date, 'tourDate')
             ->create([
-                'vendor_id' => $vendor->id,
+                'vendor_id'    => $vendor->id,
                 'total_amount' => 50000,
+                'qty'          => 2,
+                'order_id'     => \Database\Factories\OrderFactory::new()->for($buyerOne)->create()->id,
+            ]);
+
+        Reservation::factory()
+            ->for($tour, 'tour')
+            ->for($date, 'tourDate')
+            ->create([
+                'vendor_id'    => $vendor->id,
+                'total_amount' => 20000,
+                'qty'          => 1,
+                'order_id'     => \Database\Factories\OrderFactory::new()->for($buyerTwo)->create()->id,
             ]);
 
         $passenger = ReservationPassenger::create([
@@ -47,8 +61,13 @@ class VendorAnalyticsTest extends TestCase
         $export = $this->actingAs($admin)->get(route('admin.vendors.passengers', $vendor));
 
         $export->assertOk();
-        $export->assertHeader('Content-Type', 'application/vnd.ms-excel');
+        $export->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $export->assertSee($passenger->document_number);
         $export->assertSee('Tour Andes');
+
+        $analytics = $this->actingAs($admin)->get(route('admin.vendors.analytics', $vendor));
+        $analytics->assertOk();
+        $analytics->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $analytics->assertSee('Comprador Uno');
     }
 }

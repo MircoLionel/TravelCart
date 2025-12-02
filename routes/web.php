@@ -81,6 +81,7 @@ Route::prefix('admin')
         Route::get('vendors/{vendor}', [VendorAdminController::class, 'show'])->name('vendors.show');
         Route::patch('vendors/{vendor}', [VendorAdminController::class, 'update'])->name('vendors.update');
         Route::get('vendors/{vendor}/passengers', [VendorAdminController::class, 'exportPassengers'])->name('vendors.passengers');
+        Route::get('vendors/{vendor}/analytics', [VendorAdminController::class, 'exportAnalytics'])->name('vendors.analytics');
 
         // Administración de usuarios (compatibilidad con pruebas existentes)
         Route::get('users', [UserAdminController::class, 'index'])->name('users.index');
