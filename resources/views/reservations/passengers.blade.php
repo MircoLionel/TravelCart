@@ -22,15 +22,15 @@
                 <div class="rounded-lg border border-gray-200 bg-white p-4 space-y-2">
                     <h3 class="text-sm font-semibold text-gray-800">Pasajero {{ $i+1 }}</h3>
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <input type="text" name="passengers[{{ $i }}][first_name]" placeholder="Nombre" value="{{ old("passengers.$i.first_name", $existing->first_name ?? '') }}" class="rounded border-gray-300" required>
-                        <input type="text" name="passengers[{{ $i }}][last_name]" placeholder="Apellido" value="{{ old("passengers.$i.last_name", $existing->last_name ?? '') }}" class="rounded border-gray-300" required>
-                        <input type="text" name="passengers[{{ $i }}][document_number]" placeholder="Documento" value="{{ old("passengers.$i.document_number", $existing->document_number ?? '') }}" class="rounded border-gray-300" required>
-                        <input type="date" name="passengers[{{ $i }}][birth_date]" value="{{ old("passengers.$i.birth_date", optional($existing->birth_date)->format('Y-m-d')) }}" class="rounded border-gray-300">
+                        <input type="text" name="passengers[{{ $i }}][first_name]" placeholder="Nombre" value="{{ old("passengers.$i.first_name", optional($existing)->first_name) }}" class="rounded border-gray-300" required>
+                        <input type="text" name="passengers[{{ $i }}][last_name]" placeholder="Apellido" value="{{ old("passengers.$i.last_name", optional($existing)->last_name) }}" class="rounded border-gray-300" required>
+                        <input type="text" name="passengers[{{ $i }}][document_number]" placeholder="Documento" value="{{ old("passengers.$i.document_number", optional($existing)->document_number) }}" class="rounded border-gray-300" required>
+                        <input type="date" name="passengers[{{ $i }}][birth_date]" value="{{ old("passengers.$i.birth_date", optional(optional($existing)->birth_date)->format('Y-m-d')) }}" class="rounded border-gray-300">
                         <select name="passengers[{{ $i }}][sex]" class="rounded border-gray-300">
                             <option value="">Sexo</option>
-                            <option value="M" @selected(old("passengers.$i.sex", $existing->sex ?? '') === 'M')>M</option>
-                            <option value="F" @selected(old("passengers.$i.sex", $existing->sex ?? '') === 'F')>F</option>
-                            <option value="X" @selected(old("passengers.$i.sex", $existing->sex ?? '') === 'X')>X</option>
+                            <option value="M" @selected(old("passengers.$i.sex", optional($existing)->sex) === 'M')>M</option>
+                            <option value="F" @selected(old("passengers.$i.sex", optional($existing)->sex) === 'F')>F</option>
+                            <option value="X" @selected(old("passengers.$i.sex", optional($existing)->sex) === 'X')>X</option>
                         </select>
                     </div>
                 </div>
