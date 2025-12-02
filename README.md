@@ -42,6 +42,15 @@ npm run dev               # o npm run build para producción
 
 > Si ya cuentas con una base existente (por ejemplo MySQL con datos reales), ajusta las variables `DB_*` en tu `.env` antes de ejecutar las migraciones para mantener la conexión.
 
+### Actualizar una base existente (MySQL/PostgreSQL)
+Cuando tomas cambios del repositorio y necesitas aplicar las nuevas tablas/campos sin tocar tu `.env`, ejecuta:
+
+```bash
+php artisan travelcart:upgrade --seed
+```
+
+El comando corre `migrate --force` usando las credenciales activas y, si falta alguna tabla clave (tours, reservas, vínculos proveedor-comprador o pagos parciales), avisa en consola para que verifiques permisos o credenciales. No modifica tu archivo `.env`.
+
 Credenciales seed:
 - **Admin**: `admin@travelcart.test` / `password`
 - **Rol vendedor**: usuarios de ejemplo generados en `DatabaseSeeder`.
