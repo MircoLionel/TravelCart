@@ -21,6 +21,45 @@
                     </x-nav-link>
 
                     @auth
+                        @php($isVendor = Auth::user()?->isVendor() || Auth::user()?->isAdmin())
+
+                        @if($isVendor)
+                            @php($isVendorActive = request()->routeIs('vendor.*'))
+                            <x-dropdown align="left" width="56">
+                                <x-slot name="trigger">
+                                    <button
+                                        class="@class([
+                                            'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition',
+                                            'border-indigo-400 text-gray-900 focus:border-indigo-700' => $isVendorActive,
+                                            'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300' => ! $isVendorActive,
+                                        ])"
+                                    >
+                                        Proveedor
+                                        @if($isVendorActive)
+                                            <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-indigo-500"></span>
+                                        @endif
+                                        <svg class="ms-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                             viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                </x-slot>
+
+                                <x-slot name="content">
+                                    <x-dropdown-link :href="route('vendor.tours.index')" :active="request()->routeIs('vendor.tours.*')">
+                                        Mis viajes
+                                    </x-dropdown-link>
+                                    <x-dropdown-link :href="route('vendor.buyers.index')" :active="request()->routeIs('vendor.buyers.*')">
+                                        Compradores
+                                    </x-dropdown-link>
+                                    <x-dropdown-link :href="route('vendor.reservations.index')" :active="request()->routeIs('vendor.reservations.*')">
+                                        Reservas
+                                    </x-dropdown-link>
+                                </x-slot>
+                            </x-dropdown>
+                        @endif
+
                         <x-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">
                             Mis órdenes
                         </x-nav-link>
@@ -56,13 +95,9 @@
                             </x-slot>
 
                             <x-slot name="content">
-                                <x-dropdown-link :href="route('admin.tours.index')" :active="request()->routeIs('admin.tours.*')">
-                                    Tours
+                                <x-dropdown-link :href="route('admin.vendors.index')" :active="request()->routeIs('admin.vendors.*')">
+                                    Proveedores
                                 </x-dropdown-link>
-
-                                <x-dropdown-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
-                                        Usuarios
-                                    </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
                     @endcan
@@ -150,17 +185,27 @@
                 <x-responsive-nav-link :href="route('cart.show')" :active="request()->routeIs('cart.*')">
                     Carrito
                 </x-responsive-nav-link>
+
+                @php($isVendor = Auth::user()?->isVendor() || Auth::user()?->isAdmin())
+                @if($isVendor)
+                    <div class="px-4 pt-2 text-xs text-gray-400">Proveedor</div>
+                    <x-responsive-nav-link :href="route('vendor.tours.index')" :active="request()->routeIs('vendor.tours.*')">
+                        Mis viajes
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('vendor.buyers.index')" :active="request()->routeIs('vendor.buyers.*')">
+                        Compradores
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('vendor.reservations.index')" :active="request()->routeIs('vendor.reservations.*')">
+                        Reservas
+                    </x-responsive-nav-link>
+                @endif
             @endauth
 
             @can('admin')
                 <div class="px-4 pt-2 text-xs text-gray-400">Admin</div>
 
-                <x-responsive-nav-link :href="route('admin.tours.index')" :active="request()->routeIs('admin.tours.*')">
-                    Tours
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
-                    Usuarios
+                <x-responsive-nav-link :href="route('admin.vendors.index')" :active="request()->routeIs('admin.vendors.*')">
+                    Proveedores
                 </x-responsive-nav-link>
             @endcan
         </div>
