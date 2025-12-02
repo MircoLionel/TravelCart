@@ -69,6 +69,11 @@
 
                     @can('admin')
                         @php($isAdminActive = request()->routeIs('admin.*'))
+                        @php($pendingUsersCount = \App\Models\User::query()
+                            ->where(function ($q) {
+                                $q->whereNull('role')->orWhere('is_approved', false);
+                            })
+                            ->count())
                         <x-dropdown align="left" width="56">
                             <x-slot name="trigger">
                                 <button
@@ -79,7 +84,11 @@
                                     ])"
                                 >
                                     Admin
-                                    @if($isAdminActive)
+                                    @if($pendingUsersCount > 0)
+                                        <span class="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-900/60 dark:text-amber-100">
+                                            {{ $pendingUsersCount }}
+                                        </span>
+                                    @elseif($isAdminActive)
                                         <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-indigo-500"></span>
                                     @endif
                                     <svg class="ms-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -89,6 +98,12 @@
                             </x-slot>
 
                             <x-slot name="content">
+                                <x-dropdown-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                                    Usuarios
+                                    @if($pendingUsersCount > 0)
+                                        <span class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-900/60 dark:text-amber-100">{{ $pendingUsersCount }}</span>
+                                    @endif
+                                </x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.vendors.index')" :active="request()->routeIs('admin.vendors.*')">
                                     Proveedores
                                 </x-dropdown-link>
@@ -183,6 +198,7 @@
 
             @can('admin')
                 <div class="px-4 pt-2 text-xs text-gray-400">Admin</div>
+                <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">Usuarios</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.vendors.index')" :active="request()->routeIs('admin.vendors.*')">Proveedores</x-responsive-nav-link>
             @endcan
 
