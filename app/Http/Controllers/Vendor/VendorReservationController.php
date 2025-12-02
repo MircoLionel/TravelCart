@@ -155,10 +155,19 @@ class VendorReservationController extends Controller
         }
 
         $order->load('reservations');
+        $activeReservations = $order->reservations;
 
-        if ($order->reservations->every(fn ($r) => $r->status === 'confirmed')) {
+        if ($activeReservations->isEmpty()) {
+            $order->status = 'cancelled';
+            $order->save();
+            $order->delete();
+
+            return;
+        }
+
+        if ($activeReservations->every(fn ($r) => $r->status === 'confirmed')) {
             $order->status = 'paid';
-        } elseif ($order->reservations->contains(fn ($r) => $r->status === 'awaiting_passengers')) {
+        } elseif ($activeReservations->contains(fn ($r) => $r->status === 'awaiting_passengers')) {
             $order->status = 'awaiting_passengers';
         } else {
             $order->status = 'pending_payment';
