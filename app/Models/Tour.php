@@ -12,11 +12,16 @@ class Tour extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'title','description','base_price','days','origin','destination','is_active'
+        'title','description','base_price','days','origin','destination','is_active','vendor_id'
     ];
 
     public function dates(): HasMany
     {
         return $this->hasMany(TourDate::class);
+    }
+
+    public function vendor()
+    {
+        return $this->belongsTo(User::class, 'vendor_id');
     }
 }

@@ -43,6 +43,8 @@
                         $badge = match($order->status) {
                             'paid' => 'bg-green-100 text-green-800',
                             'cancelled' => 'bg-red-100 text-red-800',
+                            'awaiting_passengers' => 'bg-amber-100 text-amber-800',
+                            'pending_payment' => 'bg-blue-100 text-blue-800',
                             default => 'bg-yellow-100 text-yellow-800',
                         };
                     @endphp
@@ -55,10 +57,9 @@
                     Cliente: <strong>{{ $order->user?->name }}</strong> · {{ $order->user?->email }}
                 </span>
 
-                @if($order->reservation)
+                @if($order->reservations?->count())
                     <span class="text-sm text-gray-600">
-                        Localizador: <strong>{{ $order->reservation->locator }}</strong>
-                        (pasajeros: {{ $order->reservation->qty }})
+                        Reservas asociadas: {{ $order->reservations->count() }}
                     </span>
                 @endif
             </div>
@@ -132,8 +133,10 @@
                 </ul>
 
                 <div class="mt-4 space-y-2 text-sm text-gray-600">
-                    @if($order->status === 'pending')
-                        <p>Tu orden está <strong>pendiente</strong>. Podés presentar el voucher cuando el pago esté confirmado.</p>
+                    @if($order->status === 'awaiting_passengers')
+                        <p>Completá todos los pasajeros de cada reserva para confirmar la solicitud antes de que expire el hold.</p>
+                    @elseif($order->status === 'pending_payment')
+                        <p>Datos enviados. El <strong>proveedor</strong> gestiona y carga los pagos manualmente.</p>
                     @elseif($order->status === 'paid')
                         <p>¡Todo listo! Tu orden está <strong>pagada</strong>. Presentá el voucher el día del viaje.</p>
                     @elseif($order->status === 'cancelled')
@@ -149,6 +152,45 @@
                 </div>
             </div>
         </div>
+
+        @if($order->status === 'awaiting_passengers')
+            <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+                Necesitás cargar los datos de los pasajeros para cada reserva antes de que venza el hold de 10 minutos. Hacé clic
+                en "Cargar pasajeros" en cada tarjeta.
+            </div>
+        @endif
+
+        @if($order->reservations?->count())
+            <div class="mt-6 rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+                <h2 class="text-lg font-semibold">Reservas y pasajeros</h2>
+                <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    @foreach($order->reservations as $reservation)
+                        <div class="rounded-lg border border-gray-100 p-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-gray-500">Localizador</div>
+                                    <div class="text-lg font-semibold">{{ $reservation->locator }}</div>
+                                    <div class="text-xs text-gray-600">{{ $reservation->tour?->title }} · {{ $reservation->tourDate?->start_date?->format('d/m/Y') }}</div>
+                                </div>
+                                <div class="w-40">
+                                    <div class="h-2 w-full rounded-full bg-gray-100">
+                                        <div class="h-2 rounded-full bg-indigo-500" style="width: {{ $reservation->paidPercentage() }}%"></div>
+                                    </div>
+                                    <div class="text-xs text-gray-600 text-right">{{ $reservation->paidPercentage() }}% pago</div>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex items-center justify-between text-sm text-gray-600">
+                                <span>Pasajeros: {{ $reservation->passengers->count() }} / {{ $reservation->qty }}</span>
+                                <a class="text-indigo-600 hover:underline" href="{{ route('reservations.passengers.edit', $reservation) }}">Cargar pasajeros</a>
+                            </div>
+                            @if($reservation->hold_expires_at)
+                                <div class="mt-1 text-xs text-amber-700">Tiempo límite: {{ $reservation->hold_expires_at->format('d/m H:i') }}</div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </div>
     <a href="{{ route('orders.voucher', $order) }}" class="inline-flex px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
          Descargar voucher (PDF)
