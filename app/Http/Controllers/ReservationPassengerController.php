@@ -6,7 +6,6 @@ use App\Models\Reservation;
 use App\Models\ReservationPassenger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class ReservationPassengerController extends Controller
 {
@@ -38,7 +37,7 @@ class ReservationPassengerController extends Controller
             'passengers'   => [
                 'required',
                 'array',
-                Rule::size($reservation->qty), // se deben cargar todos los pasajeros
+                'size:' . $reservation->qty, // se deben cargar todos los pasajeros
             ],
             'passengers.*.first_name'      => 'required|string|max:255',
             'passengers.*.last_name'       => 'required|string|max:255',
