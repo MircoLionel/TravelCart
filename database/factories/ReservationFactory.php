@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\Tour;
 use App\Models\TourDate;
@@ -19,7 +20,7 @@ class ReservationFactory extends Factory
     public function definition(): array
     {
         return [
-            'order_id'     => null,
+            'order_id'     => Order::factory(),
             'tour_id'      => Tour::factory(),
             'tour_date_id' => TourDate::factory(),
             'vendor_id'    => User::factory()->vendor(),
