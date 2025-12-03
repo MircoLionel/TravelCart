@@ -26,6 +26,15 @@ class VendorReservationController extends Controller
             ->where('vendor_id', $vendor->id)
             ->orderByDesc('created_at');
 
+        $tourFilter = null;
+
+        if ($tourId = $request->query('tour')) {
+            $tourFilter = $vendor->vendorTours()->find($tourId);
+            if ($tourFilter) {
+                $query->where('tour_id', $tourId);
+            }
+        }
+
         if ($search = trim($request->query('q', ''))) {
             $query->where(function ($q) use ($search) {
                 $q->where('locator', 'like', "%{$search}%")
@@ -39,7 +48,7 @@ class VendorReservationController extends Controller
 
         $reservations = $query->paginate(20);
 
-        return view('vendor.reservations.index', compact('reservations', 'search'));
+        return view('vendor.reservations.index', compact('reservations', 'search', 'tourFilter'));
     }
 
     public function show(Reservation $reservation)

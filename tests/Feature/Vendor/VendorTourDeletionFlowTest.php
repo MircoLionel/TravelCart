@@ -59,6 +59,8 @@ class VendorTourDeletionFlowTest extends TestCase
             ->assertRedirect(route('vendor.tours.trash'));
 
         $this->assertSoftDeleted('tours', ['id' => $tour->id]);
+        $this->assertSoftDeleted('reservations', ['id' => $reservation->id]);
+        $this->assertSoftDeleted('orders', ['id' => $order->id]);
 
         $trash = $this->actingAs($vendor)->get(route('vendor.tours.trash'));
         $trash->assertOk()->assertSee($tour->title);

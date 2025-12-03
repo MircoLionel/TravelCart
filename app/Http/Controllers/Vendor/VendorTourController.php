@@ -9,6 +9,7 @@ use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class VendorTourController extends Controller
 {
@@ -86,8 +87,34 @@ class VendorTourController extends Controller
             return redirect()->route('vendor.tours.confirm-delete', $tour)->with('warn', 'Este viaje tiene reservas activas. Confirma para enviarlo a la papelera.');
         }
 
-        $tour->dates()->delete();
-        $tour->delete();
+        DB::transaction(function () use ($tour) {
+            $reservations = $tour->reservations()
+                ->whereNull('reservations.deleted_at')
+                ->with(['order', 'tourDate'])
+                ->get();
+
+            foreach ($reservations as $reservation) {
+                if ($reservation->tourDate) {
+                    $reservation->tourDate()->increment('available', $reservation->qty);
+                }
+
+                $reservation->status = 'cancelled';
+                $reservation->save();
+                $reservation->delete();
+
+                if ($order = $reservation->order) {
+                    $order->status = 'cancelled';
+                    $order->save();
+
+                    if ($order->reservations()->whereNull('reservations.deleted_at')->doesntExist()) {
+                        $order->delete();
+                    }
+                }
+            }
+
+            $tour->dates()->delete();
+            $tour->delete();
+        });
 
         return redirect()->route('vendor.tours.trash')->with('ok', 'Viaje enviado a la papelera.');
     }

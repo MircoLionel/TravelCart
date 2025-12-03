@@ -57,7 +57,7 @@
 
                         <div class="flex items-center gap-3 text-sm">
                             <a class="text-indigo-600 hover:underline" href="{{ route('vendor.tours.passengers.export', $tour) }}">Descargar pasajeros (.xls)</a>
-                            <a class="text-indigo-600 hover:underline" href="{{ route('vendor.reservations.index', ['q' => $tour->title]) }}">Ver reservas</a>
+                            <a class="text-indigo-600 hover:underline" href="{{ route('vendor.reservations.index', ['tour' => $tour->id]) }}">Ver reservas</a>
                         </div>
                     </div>
                 </div>
