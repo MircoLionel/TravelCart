@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Vendor;
 use App\Http\Controllers\Controller;
 use App\Models\Tour;
 use App\Models\ReservationPassenger;
+use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
@@ -54,6 +55,18 @@ class VendorTourController extends Controller
         return view('vendor.tours.edit', compact('tour'));
     }
 
+    public function confirmDestroy(Tour $tour)
+    {
+        $this->ensureOwnership($tour);
+        $tour->load(['reservations' => fn ($q) => $q->whereNull('reservations.deleted_at')->with('order.user')]);
+
+        if ($tour->reservations->isEmpty()) {
+            return redirect()->route('vendor.tours.edit', $tour);
+        }
+
+        return view('vendor.tours.confirm-delete', compact('tour'));
+    }
+
     public function update(Request $request, Tour $tour)
     {
         $this->ensureOwnership($tour);
@@ -67,9 +80,24 @@ class VendorTourController extends Controller
     public function destroy(Tour $tour)
     {
         $this->ensureOwnership($tour);
+        $hasReservations = $tour->reservations()->whereNull('reservations.deleted_at')->exists();
+
+        if ($hasReservations && !request()->boolean('confirm')) {
+            return redirect()->route('vendor.tours.confirm-delete', $tour)->with('warn', 'Este viaje tiene reservas activas. Confirma para enviarlo a la papelera.');
+        }
+
+        $tour->dates()->delete();
         $tour->delete();
 
-        return back()->with('ok', 'Viaje eliminado.');
+        return redirect()->route('vendor.tours.trash')->with('ok', 'Viaje enviado a la papelera.');
+    }
+
+    public function trash(Request $request)
+    {
+        $vendor = $request->user();
+        $tours = $vendor->vendorTours()->onlyTrashed()->with(['dates' => fn ($q) => $q->withTrashed()])->get();
+
+        return view('vendor.tours.trash', compact('tours'));
     }
 
     public function exportPassengers(Tour $tour)
@@ -113,6 +141,47 @@ class VendorTourController extends Controller
 
         return response($content)
             ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
+    }
+
+    public function exportTrashedPassengers($tourId)
+    {
+        $tour = Tour::withTrashed()->findOrFail($tourId);
+        $this->ensureOwnership($tour);
+
+        $reservations = Reservation::with(['passengers', 'payments', 'tourDate', 'order.user'])
+            ->where('tour_id', $tour->id)
+            ->get();
+
+        $lines = [
+            'Fecha de salida\tLocalizador\tPasajero\tDocumento\tPagado\tTotal reserva\tComprador\tEmail comprador',
+        ];
+
+        foreach ($reservations as $reservation) {
+            $paid = $reservation->payments->sum('amount');
+            $buyerName = optional($reservation->order)->user->name ?? '';
+            $buyerEmail = optional($reservation->order)->user->email ?? '';
+            $startDate = optional($reservation->tourDate?->start_date)->format('Y-m-d');
+
+            foreach ($reservation->passengers as $passenger) {
+                $lines[] = collect([
+                    $startDate,
+                    $reservation->locator,
+                    trim($passenger->first_name . ' ' . $passenger->last_name),
+                    $passenger->document_number,
+                    number_format($paid, 0, ',', '.'),
+                    number_format($reservation->total_amount, 0, ',', '.'),
+                    $buyerName,
+                    $buyerEmail,
+                ])->implode("\t");
+            }
+        }
+
+        $content = implode("\n", $lines);
+        $filename = 'papelera_' . Str::slug($tour->title ?: 'tour') . '.xlsx';
+
+        return response($content)
+            ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 

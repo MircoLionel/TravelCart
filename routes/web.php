@@ -95,6 +95,9 @@ Route::prefix('vendor')
     ->middleware(['auth', 'approved', 'vendor'])
     ->group(function () {
         Route::get('tours/{tour}/passengers/export', [VendorTourController::class, 'exportPassengers'])->name('tours.passengers.export');
+        Route::get('tours/trash', [VendorTourController::class, 'trash'])->name('tours.trash');
+        Route::get('tours/{tour}/confirm-delete', [VendorTourController::class, 'confirmDestroy'])->name('tours.confirm-delete');
+        Route::get('tours/{tour}/trash/export', [VendorTourController::class, 'exportTrashedPassengers'])->name('tours.trash.export');
         Route::resource('tours', VendorTourController::class);
         Route::post('tours/{tour}/dates', [VendorTourDateController::class, 'store'])->name('tours.dates.store');
         Route::patch('tours/{tour}/dates/{date}', [VendorTourDateController::class, 'update'])->name('tours.dates.update');

@@ -17,11 +17,7 @@
                 <button class="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700" type="submit">Guardar cambios</button>
             </div>
         </form>
-        <form method="POST" action="{{ route('vendor.tours.destroy', $tour) }}" onsubmit="return confirm('¿Eliminar viaje?')">
-            @csrf
-            @method('DELETE')
-            <button class="text-sm text-red-600 hover:underline" type="submit">Eliminar</button>
-        </form>
+        <a class="text-sm text-red-600 hover:underline" href="{{ route('vendor.tours.confirm-delete', $tour) }}">Eliminar</a>
 
         <div class="mt-6 rounded-xl border border-gray-200 bg-white p-4 space-y-4">
             <div class="flex items-center justify-between">

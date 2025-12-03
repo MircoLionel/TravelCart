@@ -2,7 +2,10 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-semibold">Mis viajes</h1>
-            <a href="{{ route('vendor.tours.create') }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">+ Nuevo viaje</a>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('vendor.tours.trash') }}" class="rounded-lg bg-gray-100 px-3 py-2 text-gray-700 hover:bg-gray-200">Papelera</a>
+                <a href="{{ route('vendor.tours.create') }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">+ Nuevo viaje</a>
+            </div>
         </div>
     </x-slot>
 
