@@ -27,7 +27,10 @@ class OrderController extends Controller
     {
         $this->authorizeView($order);
 
-        $order->loadMissing(['items.tour', 'items.tourDate', 'user']);
+        $order->loadMissing([
+            'items.tour', 'items.tourDate', 'user',
+            'reservations.tour', 'reservations.tourDate', 'reservations.passengers', 'reservations.payments',
+        ]);
 
         return view('orders.show', compact('order'));
     }

@@ -14,6 +14,20 @@
                 <button class="px-4 py-2 bg-indigo-600 text-white rounded">Buscar</button>
             </form>
 
+            <div class="mb-4 grid gap-3 md:grid-cols-2">
+                <div class="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-indigo-800">
+                    <div class="text-sm font-semibold">Pendientes por aprobar o asignar rol</div>
+                    <div class="text-2xl font-bold">{{ $pendingCount }}</div>
+                    <p class="text-xs text-indigo-700">Incluye nuevos registros sin rol o en estado no aprobado.</p>
+                </div>
+
+                <div class="rounded-lg border border-gray-200 bg-white p-4 text-gray-800">
+                    <div class="text-sm font-semibold">Tip</div>
+                    <p class="text-sm text-gray-600">Seleccioná <strong>buyer</strong> o <strong>vendor</strong> y marcá "Sí" en
+                        aprobado para habilitar al usuario.</p>
+                </div>
+            </div>
+
             @if (session('status'))
                 <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">
                     {{ session('status') }}
@@ -37,7 +51,17 @@
                         @forelse($users as $u)
                             <tr class="border-t">
                                 <td class="px-4 py-2">{{ $u->id }}</td>
-                                <td class="px-4 py-2">{{ $u->name }}</td>
+                                <td class="px-4 py-2">
+                                    <div class="font-medium text-gray-900">{{ $u->name }}</div>
+                                    <div class="flex flex-wrap gap-2 mt-1 text-xs">
+                                        @if (is_null($u->role))
+                                            <span class="rounded-full bg-yellow-100 text-yellow-800 px-2 py-0.5">Sin rol</span>
+                                        @endif
+                                        @unless ($u->is_approved)
+                                            <span class="rounded-full bg-orange-100 text-orange-800 px-2 py-0.5">Pendiente de aprobación</span>
+                                        @endunless
+                                    </div>
+                                </td>
                                 <td class="px-4 py-2">{{ $u->email }}</td>
                                 <td class="px-4 py-2">
                                     <form action="{{ route('admin.users.update', $u) }}" method="POST" class="flex items-center gap-2">
