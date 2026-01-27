@@ -38,9 +38,12 @@ php artisan key:generate
 php artisan migrate --seed
 npm install
 npm run dev               # o npm run build para producción
+php artisan serve         # levanta la app en http://localhost:8000
 ```
 
 > Si ya cuentas con una base existente (por ejemplo MySQL con datos reales), ajusta las variables `DB_*` en tu `.env` antes de ejecutar las migraciones para mantener la conexión.
+
+> Nota: Vite corre por defecto en `http://localhost:5173` solo para servir assets. La UI principal se ve desde `http://localhost:8000` con `php artisan serve`.
 
 ### Actualizar una base existente (MySQL/PostgreSQL)
 Cuando tomas cambios del repositorio y necesitas aplicar las nuevas tablas/campos sin tocar tu `.env`, ejecuta:
