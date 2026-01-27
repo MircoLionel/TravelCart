@@ -1,9 +1,6 @@
-<x-layouts.app>
-    @isset($header)
-        <x-slot name="header">
-            {{ $header }}
-        </x-slot>
-    @endisset
+@php($headerSlot = $header ?? null)
 
-    {{ $slot }}
-</x-layouts.app>
+@include('layouts.app', [
+    'header' => $headerSlot,
+    'slot' => $slot,
+])
